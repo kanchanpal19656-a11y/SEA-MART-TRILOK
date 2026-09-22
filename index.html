@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sea Mart - The Local Marketplace</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- jsPDF Library for PDF Download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Link External CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+
+    <!-- PROFILE DRAWER SIDEBAR -->
+    <div id="profile-drawer" class="profile-drawer">
+        <span class="close-drawer" onclick="toggleProfileDrawer(false)">✕</span>
+        <div class="drawer-header">
+            <div class="profile-avatar-container">
+                <img id="drawer-user-avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 24 24' fill='%2364748b'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" alt="Avatar">
+            </div>
+            <label class="upload-avatar-btn">
+                📷 Photo Badlein
+                <input type="file" class="avatar-upload-input" accept="image/*" onchange="updateCustomAvatar(event)">
+            </label>
+            <h3 id="drawer-user-name" style="font-size: 1rem; color: var(--primary-dark); margin-top: 8px;">Rajan Pal</h3>
+            <p id="drawer-user-role" style="font-size: 0.78rem; color: #64748b;">Customer</p>
+        </div>
+        <div class="drawer-menu-items">
+            <a href="mailto:rp619653@gmail.com?subject=Sea%20Mart%20Support" class="drawer-item">❓ Help & Support</a>
+            <div class="drawer-item" onclick="logout()" style="color: var(--error);">🚪 Logout Karein</div>
+        </div>
+    </div>
+
+    <!-- WELCOME SCREEN -->
+    <div id="screen-welcome" class="screen active">
+        <div class="top-hindi-tagline">"सबका भरोसा, सबका विश्वास"</div>
+        <div class="logo-container">
+            <div class="brand-name">
+                <span class="brand-sea">SEA</span><span class="brand-mart">MART</span>
+            </div>
+            <div class="brand-subtitle">The Local Marketplace</div>
+        </div>
+        <div style="width: 100%;">
+            <p class="splash-desc">Apne 2 km ke daayre ke local dukandaro se seedhe saman mangayein.</p>
+            <button onclick="goToRoleSelection()">🚀 Aage Badhein</button>
+        </div>
+    </div>
+
+    <!-- ROLE SELECTION -->
+    <div id="screen-role-selection" class="screen">
+        <h2>Aapka Swagat Hai!</h2>
+        <p style="text-align: center; color: #555; margin-top: 15px; margin-bottom: 15px;">Kripya apna role chunein:</p>
+        <div class="role-card-container">
+            <div class="role-selection-card" onclick="openModeSelection('customer')">
+                <h3>🛒 Main Customer Hoon</h3>
+                <p>Saman kharidne ke liye</p>
+            </div>
+            <div class="role-selection-card" onclick="openModeSelection('shopkeeper')">
+                <h3>🏪 Main Dukandaar Hoon</h3>
+                <p>Saman bechne ke liye</p>
+            </div>
+        </div>
+        <button class="secondary-btn" onclick="backToWelcome()" style="margin-top: 25px;">Peeche Jayein</button>
+    </div>
+
+    <!-- MODE CHOICE -->
+    <div id="screen-mode-choice" class="screen">
+        <h2 id="mode-title">Account Option</h2>
+        <p style="text-align: center; color: #555; margin-top: 15px; margin-bottom: 20px;">Aap kya karna chahte hain?</p>
+        <div class="role-card-container">
+            <div class="role-selection-card" onclick="showLoginScreen()">
+                <h3>🔑 Login Karein</h3>
+                <p>Pehle se account hai</p>
+            </div>
+            <div class="role-selection-card" onclick="showRegistrationScreen()">
+                <h3>📝 Naya Registration Karein</h3>
+                <p>Nayi ID banayein</p>
+            </div>
+        </div>
+        <button class="secondary-btn" onclick="backToRoleSelection()" style="margin-top: 25px;">Peeche Jayein</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="screen-login" class="screen">
+        <h2 id="login-heading">Login</h2>
+        <div class="form-group" style="margin-top: 15px;">
+            <label>Phone Number ya Email ID</label>
+            <input type="text" id="login-id" placeholder="Mobile / Email dalein">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="Password dalein">
+        </div>
+        <button onclick="executeLogin()">Login Karein</button>
+        <div class="switch-auth-text" style="text-align: center; margin-top: 12px; font-size: 0.9rem;">
+            Account nahi hai? <span onclick="showRegistrationScreen()" style="color:var(--primary); font-weight:bold; cursor:pointer;">Naya Account Banayein</span>
+        </div>
+        <button class="secondary-btn" onclick="backToModeChoice()" style="margin-top: 15px;">Peeche Jayein</button>
+    </div>
+
+    <!-- REGISTRATION -->
+    <div id="screen-registration" class="screen">
+        <h2 id="reg-heading">Naya Registration</h2>
+        <div class="form-group" style="margin-top: 12px;">
+            <label>Poora Naam (Full Name)</label>
+            <input type="text" id="reg-name" placeholder="Apna naam likhein">
+        </div>
+        <div class="form-group">
+            <label>Phone Number (10 Digit)</label>
+            <input type="tel" id="reg-phone" maxlength="10" placeholder="Mobile number dalein">
+        </div>
+        <div class="form-group">
+            <label>Email ID</label>
+            <input type="email" id="reg-email" placeholder="Email id dalein">
+        </div>
+
+        <div id="shopkeeper-reg-fields" style="display: none; width: 100%;">
+            <div class="form-group">
+                <label>Dukan ka Naam & Address</label>
+                <input type="text" id="reg-shop-name" placeholder="Jaise: Gupta Kirana Store">
+            </div>
+            <div class="form-group">
+                <label>ID Card Number</label>
+                <input type="text" id="aadhaarInput" placeholder="Enter ID Number" maxlength="12">
+                <button type="button" onclick="verifyAadhaar()" style="background: #2575fc; padding: 8px; margin-top: 4px; font-size:0.85rem;">Verify ID</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <button type="button" onclick="generateAndShowOTP()">Get OTP (OTP Generate Karein)</button>
+        </div>
+
+        <div id="otp-container-box" style="display: none; width: 100%;">
+            <div class="otp-display-box">
+                <p style="font-size: 0.78rem; color: #b45309; margin-bottom: 2px; font-weight: bold;">Live 6-Digit OTP:</p>
+                <span id="generated-otp-text">------</span>
+            </div>
+            <div class="form-group">
+                <label>Enter 6-Digit OTP</label>
+                <input type="text" id="otp-input" maxlength="6" placeholder="6-digit OTP type karein">
+            </div>
+            <div class="form-group">
+                <label>Naya Password Set Karein</label>
+                <input type="password" id="new-password" placeholder="Password banayein">
+            </div>
+            <button onclick="verifyAndCompleteRegistration()">Registration Pura Karein</button>
+        </div>
+
+        <div class="switch-auth-text" style="text-align: center; margin-top: 12px; font-size: 0.9rem;">
+            Pehle se account hai? <span onclick="showLoginScreen()" style="color:var(--primary); font-weight:bold; cursor:pointer;">Login Karein</span>
+        </div>
+        <button class="secondary-btn" onclick="backToModeChoice()" style="margin-top: 15px;">Peeche Jayein</button>
+    </div>
+
+    <!-- CUSTOMER HOME -->
+    <div id="screen-customer-home" class="screen">
+        <div class="top-header-bar">
+            <span class="menu-icon" onclick="toggleProfileDrawer(true, 'customer')">☰</span>
+            <h2 style="font-size: 1.1rem;">Aas-paas (2 km) Dukanen</h2>
+            <div style="font-size: 0.75rem; background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 12px; font-weight: bold;">📍 GPS Live ON</div>
+        </div>
+
+        <!-- Store Filter Bar -->
+        <div id="store-filter-bar" class="store-filter-bar"></div>
+
+        <!-- Customer Product Grid -->
+        <div id="customer-product-grid" class="customer-product-grid"></div>
+
+        <!-- Checkout Section -->
+        <div class="checkout-box">
+            <h3 style="color: #b45309; font-size: 0.95rem; margin-bottom: 6px;">📋 Order Detail & Address</h3>
+            <div class="form-group" style="margin-bottom: 6px;">
+                <label style="font-size: 0.8rem;">Aapka Poora Naam</label>
+                <input type="text" id="order-customer-name" placeholder="Naam likhein" style="padding: 7px; font-size: 0.85rem;">
+            </div>
+            <div class="form-group" style="margin-bottom: 6px;">
+                <label style="font-size: 0.8rem;">Mobile Number (Anivarya - 10 Digit)</label>
+                <input type="tel" id="order-customer-phone" maxlength="10" placeholder="10 digit mobile number dalein" style="padding: 7px; font-size: 0.85rem;">
+            </div>
+            <div class="form-group" style="margin-bottom: 6px;">
+                <label style="font-size: 0.8rem;">Sahi Local Address (Anivarya)</label>
+                <textarea id="order-customer-address" placeholder="Gali no, Landmark, Area ka poora address dalein..." style="padding: 7px; font-size: 0.85rem; height: 40px; resize: none;"></textarea>
+            </div>
+            <p style="font-size: 0.8rem;">Total Items: <span id="cart-count">0</span> | Total: ₹<span id="cart-total">0</span></p>
+            <button onclick="placeOrder()" style="padding: 9px; font-size: 0.9rem; margin-top: 6px;">Order Place Karein</button>
+        </div>
+
+        <!-- CUSTOMER BUTTON BAR: Tracking Order -->
+        <div class="track-order-widget" onclick="openTrackOrderModal()">
+            <i class="fas fa-truck-fast"></i> Tracking Order
+        </div>
+    </div>
+
+    <!-- TRACK ORDER STATUS MODAL SCREEN -->
+    <div id="screen-track-order" class="screen">
+        <div class="top-header-bar">
+            <span class="menu-icon" onclick="backToCustomerHome()">⬅️</span>
+            <h2 style="font-size: 1.1rem;">📦 Order Tracking & Delivery OTP</h2>
+            <div></div>
+        </div>
+        <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 10px;">
+            <p style="font-size: 0.85rem; color: #555; margin-bottom: 10px;">Aapke active orders aur secret Delivery OTP yahan dikhenge:</p>
+            <div id="track-order-list" style="display: flex; flex-direction: column; gap: 8px;">
+                <p style="font-size: 0.8rem; color: #777; text-align: center;">Abhi koi active order nahi hai.</p>
+            </div>
+        </div>
+        <button class="secondary-btn" onclick="backToCustomerHome()" style="margin-top: 20px;">Vaapis Jayein</button>
+    </div>
+
+    <!-- SHOPKEEPER DASHBOARD -->
+    <div id="screen-shop-dashboard" class="screen">
+        <div class="top-header-bar">
+            <span class="menu-icon" onclick="toggleProfileDrawer(true, 'shopkeeper')">☰</span>
+            <h2 style="font-size: 1.1rem;">Dukandaar Dashboard</h2>
+            <div style="font-size: 0.75rem; background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 12px; font-weight: bold;">📍 GPS Live ON</div>
+        </div>
+
+        <div class="form-group" style="background: #f1f5f9; padding: 6px 10px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+            <p style="font-size: 0.82rem;"><strong>Dukan:</strong> <span id="shop-name-display">Gupta Kirana Store</span></p>
+            <button onclick="stopAlertBeep()" style="background: var(--error); padding: 4px 8px; font-size: 0.7rem; width: auto; margin-top:0;" id="stop-alarm-btn">🔇 Stop Alarm</button>
+        </div>
+
+        <!-- DUKANDAAR 3-BUTTON BARS -->
+        <div class="dashboard-button-bar-container">
+            <button class="dash-action-bar-btn" onclick="switchShopTab('stock')"><i class="fas fa-boxes-stacked"></i> Stock Name</button>
+            <button class="dash-action-bar-btn accent" onclick="switchShopTab('order')"><i class="fas fa-clipboard-list"></i> Order Name</button>
+            <button class="dash-action-bar-btn success-btn" onclick="switchShopTab('sell')"><i class="fas fa-receipt"></i> Sell Item</button>
+        </div>
+
+        <!-- SECTION 1: STOCK NAME VIEW -->
+        <div id="shop-sub-stock" class="shop-sub-section active-sub">
+            <div class="shop-tool-section">
+                <h3 style="font-size: 0.95rem; color: var(--primary); margin-bottom: 8px;"><i class="fas fa-plus-circle"></i> Naya Product Live Karein</h3>
+                <div class="form-group" style="margin-bottom: 4px;">
+                    <label style="font-size: 0.8rem;">Product Ka Naam</label>
+                    <input type="text" id="product-name" placeholder="Product name" style="padding: 7px; font-size: 0.85rem;">
+                </div>
+                <div class="form-group" style="margin-bottom: 6px;">
+                    <label style="font-size: 0.8rem;">Price (₹)</label>
+                    <input type="number" id="product-price" placeholder="Price" style="padding: 7px; font-size: 0.85rem;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 6px;">
+                    <label style="font-size: 0.8rem;">Product Photo (Live Camera ya Gallery)</label>
+                    <div style="display: flex; gap: 6px; margin-bottom: 6px;">
+                        <button type="button" onclick="openShopLiveCamera()" style="background: #2575fc; padding: 8px; font-size: 0.8rem; margin-top:0;">📷 Live Camera On</button>
+                        <input type="file" id="product-image-input" accept="image/*" style="padding: 4px; font-size: 0.75rem; flex:1;">
+                    </div>
+                    <div id="shop-camera-box" style="display:none; margin-top: 6px; text-align: center; background: #000; border-radius: 6px; padding: 6px;">
+                        <video id="shop-webcam-video" autoplay playsinline style="width: 100%; max-height: 180px; border-radius: 4px; object-fit: cover;"></video>
+                        <button type="button" onclick="captureShopWebcamPhoto()" style="background: var(--success); padding: 6px 12px; font-size: 0.8rem; margin-top: 4px; width: auto;">📸 Photo Capture Karein</button>
+                        <canvas id="shop-webcam-canvas" style="display:none;"></canvas>
+                    </div>
+                    <div id="shop-captured-preview" style="margin-top: 6px;"></div>
+                </div>
+
+                <button onclick="postProduct()" style="padding: 9px; margin-top: 2px; font-size: 0.9rem;">Item Live Karein</button>
+            </div>
+
+            <div class="shop-tool-section" style="margin-top: 15px;">
+                <h3 style="font-size: 0.95rem; color: var(--primary); margin-bottom: 8px;"><i class="fas fa-list"></i> Aapke Saare Live Items ki List</h3>
+                <div id="shop-live-items-list-box" style="display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto;">
+                    <p style="font-size: 0.78rem; color: #777; text-align: center;">Abhi koi item live nahi hai.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: ORDER NAME VIEW -->
+        <div id="shop-sub-order" class="shop-sub-section">
+            <div class="shop-tool-section" style="border-color: var(--accent);">
+                <h3 style="font-size: 0.95rem; color: var(--primary); margin-bottom: 8px;"><i class="fas fa-bell"></i> Received Orders (Order Name)</h3>
+                <div id="shop-received-orders-box" style="display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto;">
+                    <p style="font-size: 0.78rem; color: #777; text-align: center;">Abhi koi naya order nahi aaya hai.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: SELL ITEM VIEW -->
+        <div id="shop-sub-sell" class="shop-sub-section">
+            <div class="shop-tool-section" style="border-color: var(--success);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h3 style="font-size: 0.95rem; color: var(--success);"><i class="fas fa-check-circle"></i> Sold Items History</h3>
+                    <button onclick="downloadSoldItemsPDF()" style="background: #d32f2f; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; cursor: pointer; width: auto; margin-top: 0; display: flex; align-items: center; gap: 4px;">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </button>
+                </div>
+                <p style="font-size: 0.78rem; color: #64748b; margin-bottom: 10px;">Jub aap order deliver kar dete hain, woh item yahan details ke sath save ho jata hai:</p>
+                <div id="shop-sold-items-box" style="display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto;">
+                    <p style="font-size: 0.78rem; color: #777; text-align: center;">Abhi tak koi item nahi becha gaya hai.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Link External JavaScript -->
+<script src="script.js"></script>
+</body>
+</html>
