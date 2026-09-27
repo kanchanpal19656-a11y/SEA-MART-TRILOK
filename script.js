@@ -14,6 +14,15 @@ let defaultUsers = [
 ];
 let registeredUsers = JSON.parse(localStorage.getItem('sm_registeredUsers')) || defaultUsers;
 
+// Default live products initialization in localStorage so cart buttons work properly
+if(!localStorage.getItem('sm_liveProducts')) {
+    let initialProducts = [
+        { id: 1, name: "Aashirvaad Atta (5kg)", price: 240, shop: "Gupta Kirana Store", shopLat: 28.4750, shopLng: 77.5050, image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80" },
+        { id: 2, name: "Fortune Sunflower Oil (1L)", price: 130, shop: "Sharma General Store", shopLat: 28.4800, shopLng: 77.5100, image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=200&q=80" }
+    ];
+    localStorage.setItem('sm_liveProducts', JSON.stringify(initialProducts));
+}
+
 let cart = {};
 let alertInterval = null;
 let shopCameraStream = null;
@@ -40,7 +49,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Real-time sync listener across tabs/views & custom event
+// Real-time sync listener across tabs & custom events
 window.addEventListener('storage', (e) => {
     if(e.key === 'sm_liveProducts') {
         if(currentRole === 'customer' && document.getElementById('screen-customer-home').classList.contains('active')) {
@@ -59,6 +68,8 @@ window.addEventListener('sm_productUpdated', () => {
     if(currentRole === 'customer' && document.getElementById('screen-customer-home').classList.contains('active')) {
         loadStoreFilterBar();
         loadCustomerProducts();
+    } else if(currentRole === 'shopkeeper' && document.getElementById('screen-shop-dashboard').classList.contains('active')) {
+        updateShopLiveItemsUI();
     }
 });
 
@@ -226,17 +237,6 @@ function verifyAndCompleteRegistration() {
         localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
         localStorage.setItem('sm_isLoggedIn', 'true');
 
-        if(typeof emailjs !== 'undefined') {
-            let templateParams = {
-                user_name: loggedInUserName,
-                user_phone: loggedInUserPhone,
-                user_email: loggedInUserEmail,
-                user_role: currentRole,
-                shop_name: postalName || "N/A"
-            };
-            emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams).catch(err => {});
-        }
-
         alert("🎉 Registration Safal Raha!");
         document.getElementById('screen-registration').classList.remove('active');
 
@@ -307,16 +307,13 @@ function loadStoreFilterBar() {
     if(!bar) return;
     bar.innerHTML = '';
 
-    let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [
-        { id: 1, name: "Aashirvaad Atta (5kg)", price: 240, shop: "Gupta Kirana Store", shopLat: 28.4750, shopLng: 77.5050, image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80" },
-        { id: 2, name: "Fortune Sunflower Oil (1L)", price: 130, shop: "Sharma General Store", shopLat: 28.4800, shopLng: 77.5100, image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=200&q=80" }
-    ];
+    let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
 
     let nearbyProducts = liveProducts.filter(p => {
         let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
         p.calculatedDistanceNum = dist;
         p.distanceText = dist.toFixed(1) + " km";
-        return dist <= 2.0;
+        return dist <= 50.0; // Expanded range so all added items show up reliably
     });
 
     let stores = ["All", ...new Set(nearbyProducts.map(p => p.shop))];
@@ -342,16 +339,13 @@ function loadCustomerProducts() {
     let searchInput = document.getElementById('customer-search-input');
     let searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : "";
 
-    let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [
-        { id: 1, name: "Aashirvaad Atta (5kg)", price: 240, shop: "Gupta Kirana Store", shopLat: 28.4750, shopLng: 77.5050, image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80" },
-        { id: 2, name: "Fortune Sunflower Oil (1L)", price: 130, shop: "Sharma General Store", shopLat: 28.4800, shopLng: 77.5100, image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=200&q=80" }
-    ];
+    let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
 
     let nearbyProducts = liveProducts.filter(p => {
         let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
         p.calculatedDistanceNum = dist;
         p.distanceText = dist.toFixed(1) + " km";
-        return dist <= 2.0;
+        return dist <= 50.0; // Expanded range so items appear instantly
     });
 
     if(selectedStoreFilter !== "All") {
@@ -371,7 +365,7 @@ function loadCustomerProducts() {
     }
 
     nearbyProducts.forEach(prod => {
-        let qty = cart[prod.id] ? cart[prod.id].quantity : 0;
+        let qty = cart[prod.id] ? cart[prod.id].quantity : (cart[String(prod.id)] ? cart[String(prod.id)].quantity : 0);
         let card = document.createElement('div');
         card.className = 'customer-product-card';
         card.innerHTML = `
@@ -382,8 +376,8 @@ function loadCustomerProducts() {
                 <p style="font-size: 0.75rem;">🏪 ${prod.shop} • 📍 ${prod.distanceText}</p>
             </div>
             <div class="qty-controls">
-                ${qty > 0 ? `<button class="qty-btn minus" onclick="updateCartQty(${prod.id}, -1)">-</button><span style="font-size: 0.9rem; font-weight: bold; min-width: 16px; text-align: center;">${qty}</span>` : ''}
-                <button class="qty-btn" onclick="updateCartQty(${prod.id}, 1)">+</button>
+                ${qty > 0 ? `<button class="qty-btn minus" onclick="updateCartQty('${prod.id}', -1)">-</button><span style="font-size: 0.9rem; font-weight: bold; min-width: 16px; text-align: center;">${qty}</span>` : ''}
+                <button class="qty-btn" onclick="updateCartQty('${prod.id}', 1)">+</button>
             </div>
         `;
         gridContainer.appendChild(card);
@@ -392,7 +386,7 @@ function loadCustomerProducts() {
 
 function updateCartQty(productId, change) {
     let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
-    let prod = liveProducts.find(p => p.id === productId);
+    let prod = liveProducts.find(p => String(p.id) === String(productId));
     if(!prod) return;
 
     if(!cart[productId]) {
@@ -492,7 +486,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
     }
 }
 
@@ -778,7 +772,7 @@ function saveNewProduct(name, price, imageUrl) {
     liveProducts.push(newProd);
     localStorage.setItem('sm_liveProducts', JSON.stringify(liveProducts));
 
-    // ⚡ Real-time Custom Event fire karne ke liye taaki bina page refresh kiye dikhe
+    // ⚡ Trigger real-time update event across windows and views
     window.dispatchEvent(new Event('sm_productUpdated'));
 
     alert("✨ Product turant live stock mein jud gaya hai!");
