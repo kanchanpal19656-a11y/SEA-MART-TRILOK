@@ -14,7 +14,6 @@ let defaultUsers = [
 ];
 let registeredUsers = JSON.parse(localStorage.getItem('sm_registeredUsers')) || defaultUsers;
 
-// Default live products initialization in localStorage
 if(!localStorage.getItem('sm_liveProducts')) {
     let initialProducts = [
         { id: 1, name: "Aashirvaad Atta (5kg)", price: 240, shop: "Gupta Kirana Store", shopLat: 28.4750, shopLng: 77.5050, image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80" },
@@ -28,7 +27,6 @@ let alertInterval = null;
 let shopCameraStream = null;
 let capturedWebcamDataUrl = "";
 
-// Page load hone par check karein
 window.addEventListener('DOMContentLoaded', () => {
     let isLoggedIn = localStorage.getItem('sm_isLoggedIn');
     if(isLoggedIn === 'true') {
@@ -49,7 +47,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Real-time sync listener across tabs & custom events
 window.addEventListener('storage', (e) => {
     if(e.key === 'sm_liveProducts') {
         if(currentRole === 'customer' && document.getElementById('screen-customer-home').classList.contains('active')) {
@@ -687,6 +684,35 @@ function updateShopSoldItemsUI() {
     });
 }
 
+// PDF Download Logic Function
+function downloadShopReportPDF() {
+    if (typeof html2pdf === 'undefined') {
+        alert("❌ PDF library load nahi hui hai! Kripya HTML ke head section mein html2pdf CDN script add karein.");
+        return;
+    }
+
+    let element = document.getElementById('shop-sold-items-box');
+    if (!element || element.innerHTML.trim() === '' || element.innerText.includes('Abhi tak koi item nahi becha')) {
+        alert("⚠️ Download karne ke liye koi sold history data available nahi hai!");
+        return;
+    }
+
+    let options = {
+        margin:       10,
+        filename:     `${postalName}_Sold_Report.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(options).from(element).save().then(() => {
+        console.log("PDF downloaded successfully!");
+    }).catch(err => {
+        console.error("PDF Error: ", err);
+        alert("PDF generate karne mein kuch samasya aayi.");
+    });
+}
+
 function openTrackOrderModal() {
     document.getElementById('screen-customer-home').classList.remove('active');
     document.getElementById('screen-track-order').classList.add('active');
@@ -770,7 +796,6 @@ function saveNewProduct(name, price, imageUrl) {
     liveProducts.push(newProd);
     localStorage.setItem('sm_liveProducts', JSON.stringify(liveProducts));
 
-    // Real-time trigger for instant customer UI refresh
     window.dispatchEvent(new Event('sm_productUpdated'));
     if(typeof loadCustomerProducts === 'function') {
         loadCustomerProducts();
