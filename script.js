@@ -751,6 +751,9 @@ function updateShopSoldItemsUI() {
     });
 }
 
+// ==========================================
+// NEW: Universal Cross-Platform PDF Download
+// ==========================================
 function downloadShopReportPDF() {
     let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
     let mySoldItems = soldItemsHistory.filter(s => s.shopName === postalName);
@@ -760,28 +763,28 @@ function downloadShopReportPDF() {
         return;
     }
 
-    let printWindow = window.open('', '_blank');
-    if(!printWindow) {
-        alert("⚠️ Pop-up blocked! Kripya pop-ups allow karein.");
-        return;
-    }
-
     let grandTotalAmount = mySoldItems.reduce((sum, item) => sum + item.totalPrice, 0);
     let grandTotalQty = mySoldItems.reduce((sum, item) => sum + item.quantity, 0);
 
     let htmlContent = `
+        <!DOCTYPE html>
         <html>
         <head>
+            <meta charset="UTF-8">
             <title>${postalName} - Real-Time Sold Report</title>
             <style>
-                body { font-family: Arial, sans-serif; padding: 25px; color: #222; }
-                h2 { color: #0b3c65; text-align: center; border-bottom: 2px solid #0b3c65; padding-bottom: 8px; }
-                .meta { margin-bottom: 20px; font-size: 14px; color: #555; }
+                body { font-family: Arial, sans-serif; padding: 20px; color: #222; background: #fff; }
+                h2 { color: #0b3c65; text-align: center; border-bottom: 2px solid #0b3c65; padding-bottom: 8px; margin-bottom: 15px; }
+                .meta { margin-bottom: 20px; font-size: 14px; color: #555; background: #f8fafc; padding: 10px; border-radius: 6px; }
                 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
                 th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 13px; }
                 th { background-color: #f1f5f9; color: #0f172a; }
                 .total-box { margin-top: 20px; padding: 15px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; text-align: right; }
                 .total-box p { margin: 5px 0; font-size: 16px; font-weight: bold; color: #166534; }
+                @media print {
+                    body { padding: 0; }
+                    button { display: none; }
+                }
             </style>
         </head>
         <body>
@@ -794,7 +797,7 @@ function downloadShopReportPDF() {
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Item Name</th>
+                        <th>Item Name & Customer</th>
                         <th>Date & Time</th>
                         <th>MRP (Per Unit)</th>
                         <th>Qty</th>
@@ -808,7 +811,7 @@ function downloadShopReportPDF() {
         htmlContent += `
             <tr>
                 <td>${index + 1}</td>
-                <td><strong>${sold.itemName}</strong><br><small style="color:#64748b;">Customer: ${sold.customerName}</small></td>
+                <td><strong>${sold.itemName}</strong><br><small style="color:#64748b;">Customer: ${sold.customerName} (${sold.customerAddress || 'N/A'})</small></td>
                 <td>${sold.date} <br> ${sold.time}</td>
                 <td>₹${sold.itemPrice}</td>
                 <td>${sold.quantity}</td>
@@ -824,18 +827,42 @@ function downloadShopReportPDF() {
                 <p>Total Items Sold Quantity: ${grandTotalQty} Units</p>
                 <p style="font-size: 18px; color: #0b3c65;">Grand Total Real-Time Revenue: ₹${grandTotalAmount}</p>
             </div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="window.print()" style="background: #2563eb; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">🖨️ Print / Save as PDF</button>
+            </div>
         </body>
         </html>
     `;
 
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+    let blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    let blobUrl = URL.createObjectURL(blob);
 
-    setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-    }, 600);
+    let printWindow = window.open(blobUrl, '_blank');
+    
+    if (!printWindow || printWindow.closed || typeof printWindow.closed === 'undefined') {
+        let iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = blobUrl;
+        document.body.appendChild(iframe);
+        
+        setTimeout(() => {
+            try {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } catch (e) {
+                alert("⚠️ Pop-up blocked! Kripya browser settings mein pop-ups allow karein ya diye gaye URL ko open karein.");
+            }
+        }, 500);
+    } else {
+        printWindow.onload = function() {
+            setTimeout(() => {
+                printWindow.focus();
+                printWindow.print();
+            }, 500);
+        };
+    }
 }
+// ==========================================
 
 function openTrackOrderModal() {
     document.getElementById('screen-customer-home').classList.remove('active');
