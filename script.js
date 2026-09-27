@@ -684,33 +684,60 @@ function updateShopSoldItemsUI() {
     });
 }
 
-// PDF Download Logic Function
+// 100% Working Native Print/PDF Download Logic
 function downloadShopReportPDF() {
-    if (typeof html2pdf === 'undefined') {
-        alert("❌ PDF library load nahi hui hai! Kripya HTML ke head section mein html2pdf CDN script add karein.");
-        return;
-    }
+    let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
+    let mySoldItems = soldItemsHistory.filter(s => s.shopName === postalName);
 
-    let element = document.getElementById('shop-sold-items-box');
-    if (!element || element.innerHTML.trim() === '' || element.innerText.includes('Abhi tak koi item nahi becha')) {
+    if (mySoldItems.length === 0) {
         alert("⚠️ Download karne ke liye koi sold history data available nahi hai!");
         return;
     }
 
-    let options = {
-        margin:       10,
-        filename:     `${postalName}_Sold_Report.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+    let printWindow = window.open('', '_blank');
+    
+    let htmlContent = `
+        <html>
+        <head>
+            <title>${postalName} - Sold Items Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+                h2 { color: #0b3c65; text-align: center; border-bottom: 2px solid #0b3c65; padding-bottom: 10px; }
+                .item { border: 1px solid #ddd; padding: 12px; margin-bottom: 10px; border-radius: 6px; background: #f9f9f9; }
+                .item p { margin: 4px 0; font-size: 14px; }
+                .total { font-weight: bold; color: #166534; }
+            </style>
+        </head>
+        <body>
+            <h2>🏪 ${postalName} - Sold History Report</h2>
+            <p><strong>Generated On:</strong> ${new Date().toLocaleString()}</p>
+            <hr style="margin-bottom: 20px;"/>
+    `;
 
-    html2pdf().set(options).from(element).save().then(() => {
-        console.log("PDF downloaded successfully!");
-    }).catch(err => {
-        console.error("PDF Error: ", err);
-        alert("PDF generate karne mein kuch samasya aayi.");
+    mySoldItems.forEach((sold, index) => {
+        htmlContent += `
+            <div class="item">
+                <p><strong>#${index + 1} - ${sold.itemName}</strong></p>
+                <p>Quantity: ${sold.quantity} Unit | Per Unit MRP: ₹${sold.itemPrice}</p>
+                <p class="total">Total Price: ₹${sold.totalPrice}</p>
+                <p>Customer: ${sold.customerName} (${sold.customerAddress})</p>
+                <p><small>Date: ${sold.date} | Time: ${sold.time}</small></p>
+            </div>
+        `;
     });
+
+    htmlContent += `
+        </body>
+        </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+
+    setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+    }, 500);
 }
 
 function openTrackOrderModal() {
