@@ -14,7 +14,7 @@ let defaultUsers = [
 ];
 let registeredUsers = JSON.parse(localStorage.getItem('sm_registeredUsers')) || defaultUsers;
 
-// Default live products initialization in localStorage so cart buttons work properly
+// Default live products initialization in localStorage
 if(!localStorage.getItem('sm_liveProducts')) {
     let initialProducts = [
         { id: 1, name: "Aashirvaad Atta (5kg)", price: 240, shop: "Gupta Kirana Store", shopLat: 28.4750, shopLng: 77.5050, image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80" },
@@ -313,7 +313,7 @@ function loadStoreFilterBar() {
         let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
         p.calculatedDistanceNum = dist;
         p.distanceText = dist.toFixed(1) + " km";
-        return dist <= 50.0; // Expanded range so all added items show up reliably
+        return dist <= 50.0;
     });
 
     let stores = ["All", ...new Set(nearbyProducts.map(p => p.shop))];
@@ -345,7 +345,7 @@ function loadCustomerProducts() {
         let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
         p.calculatedDistanceNum = dist;
         p.distanceText = dist.toFixed(1) + " km";
-        return dist <= 50.0; // Expanded range so items appear instantly
+        return dist <= 50.0;
     });
 
     if(selectedStoreFilter !== "All") {
@@ -486,7 +486,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
     }
 }
 
@@ -772,8 +772,12 @@ function saveNewProduct(name, price, imageUrl) {
     liveProducts.push(newProd);
     localStorage.setItem('sm_liveProducts', JSON.stringify(liveProducts));
 
-    // ⚡ Trigger real-time update event across windows and views
+    // ⚡ Real-time trigger for instant customer UI refresh
     window.dispatchEvent(new Event('sm_productUpdated'));
+    if(typeof loadCustomerProducts === 'function') {
+        loadCustomerProducts();
+        loadStoreFilterBar();
+    }
 
     alert("✨ Product turant live stock mein jud gaya hai!");
 
