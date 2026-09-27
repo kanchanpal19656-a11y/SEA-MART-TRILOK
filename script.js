@@ -159,7 +159,7 @@ function showRegistrationScreen() {
     document.getElementById('screen-mode-choice').classList.remove('active');
     document.getElementById('screen-login').classList.remove('active');
     document.getElementById('screen-registration').classList.add('active');
-    document.getElementById('reg-heading').innerText = (currentRole === 'customer') ? "Customer Registration" : "Dukandaار Registration";
+    document.getElementById('reg-heading').innerText = (currentRole === 'customer') ? "Customer Registration" : "Dukandaar Registration";
 
     if(currentRole === 'shopkeeper') {
         document.getElementById('shopkeeper-reg-fields').style.display = 'block';
@@ -481,7 +481,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
     }
 }
 
@@ -517,16 +517,19 @@ function captureShopWebcamPhoto() {
     document.getElementById('shop-camera-box').style.display = 'none';
 }
 
-// Gallery / Downloaded Pic Upload Function (Ab live pic screen par preview dikhayega)
+// Gallery / File Picker Image Handling Function (Ab strictly user ki select ki hui pic hi aayegi)
 function handleShopUploadedImage(event) {
     let file = event.target.files[0];
     if(file) {
         let reader = new FileReader();
         reader.onload = function(e) {
             capturedWebcamDataUrl = e.target.result;
-            // Ab gallery wali pic bhi turant live pic ke preview box mein dikhegi
-            document.getElementById('shop-captured-preview').innerHTML = `<img src="${capturedWebcamDataUrl}" style="width: 70px; height: 70px; border-radius: 6px; object-fit: cover; border: 1px solid #cbd5e1;"> <span style="font-size:0.75rem; color:var(--success); font-weight:bold;">Gallery Pic Attached ✅</span>`;
-        }
+            // Sirf wahi pic dikhegi jo user ne gallery se select ki hai
+            document.getElementById('shop-captured-preview').innerHTML = `
+                <img src="${capturedWebcamDataUrl}" style="width: 70px; height: 70px; border-radius: 6px; object-fit: cover; border: 1px solid #cbd5e1;"> 
+                <span style="font-size:0.75rem; color:var(--success); font-weight:bold;">Gallery Pic Attached ✅</span>
+            `;
+        };
         reader.readAsDataURL(file);
     }
 }
@@ -698,7 +701,6 @@ function updateShopSoldItemsUI() {
     });
 }
 
-// 100% Working Native Print/PDF Download Logic
 function downloadShopReportPDF() {
     let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
     let mySoldItems = soldItemsHistory.filter(s => s.shopName === postalName);
@@ -795,6 +797,7 @@ function backToCustomerHome() {
     loadCustomerProducts();
 }
 
+// Product post karne ka updated function (Ab ye sirf wahi pic lega jo user ne live ya gallery se select ki hai)
 function postProduct() {
     let name = document.getElementById('product-name').value.trim();
     let price = document.getElementById('product-price').value.trim();
@@ -804,15 +807,14 @@ function postProduct() {
         return;
     }
 
-    let defaultImg = "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80";
-
-    if(capturedWebcamDataUrl) {
-        saveNewProduct(name, price, capturedWebcamDataUrl);
-        capturedWebcamDataUrl = "";
-        document.getElementById('shop-captured-preview').innerHTML = '';
-    } else {
-        saveNewProduct(name, price, defaultImg);
+    if(!capturedWebcamDataUrl) {
+        alert("⚠️ Kripya pehle camera se live photo lein ya gallery se pic select karein!");
+        return;
     }
+
+    saveNewProduct(name, price, capturedWebcamDataUrl);
+    capturedWebcamDataUrl = "";
+    document.getElementById('shop-captured-preview').innerHTML = '';
 }
 
 function saveNewProduct(name, price, imageUrl) {
