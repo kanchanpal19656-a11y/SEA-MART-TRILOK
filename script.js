@@ -489,7 +489,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
     }
 }
 
@@ -592,6 +592,9 @@ function updateShopLiveItemsUI() {
     myLiveProducts.forEach(prod => {
         let div = document.createElement('div');
         div.className = 'live-stock-item-card';
+        div.style.display = 'flex';
+        div.style.justify = 'space-between';
+        div.style.alignItems = 'center';
         div.innerHTML = `
             <div style="display: flex; align-items: center; gap: 8px;">
                 <img src="${prod.image}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
@@ -600,10 +603,34 @@ function updateShopLiveItemsUI() {
                     <p style="font-size: 0.8rem; color: #b45309; font-weight: bold;">₹${prod.price}</p>
                 </div>
             </div>
-            <span style="font-size: 0.75rem; background: #dcfce7; color: #166534; padding: 3px 6px; border-radius: 4px; font-weight: bold;">Live ✅</span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 0.75rem; background: #dcfce7; color: #166534; padding: 3px 6px; border-radius: 4px; font-weight: bold;">Live ✅</span>
+                <button onclick="deleteShopProduct('${prod.id}')" style="background-color: #ef4444; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer;">🗑️ Delete</button>
+            </div>
         `;
         box.appendChild(div);
     });
+}
+
+// Dukandaar dwara live item delete karne ka function
+function deleteShopProduct(productId) {
+    if(!confirm("Kya aap sach mein is live item ko delete karna chahte hain?")) {
+        return;
+    }
+
+    let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
+    let updatedProducts = liveProducts.filter(p => String(p.id) !== String(productId));
+
+    localStorage.setItem('sm_liveProducts', JSON.stringify(updatedProducts));
+
+    window.dispatchEvent(new Event('sm_productUpdated'));
+    updateShopLiveItemsUI();
+    if(typeof loadCustomerProducts === 'function') {
+        loadCustomerProducts();
+        loadStoreFilterBar();
+    }
+
+    alert("🗑️ Item successfully delete ho gaya hai!");
 }
 
 function updateShopReceivedOrdersUI() {
