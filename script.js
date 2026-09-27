@@ -612,7 +612,6 @@ function updateShopLiveItemsUI() {
     });
 }
 
-// Dukandaar dwara live item delete karne ka function
 function deleteShopProduct(productId) {
     if(!confirm("Kya aap sach mein is live item ko delete karna chahte hain?")) {
         return;
@@ -762,38 +761,69 @@ function downloadShopReportPDF() {
     }
 
     let printWindow = window.open('', '_blank');
-    
+    if(!printWindow) {
+        alert("⚠️ Pop-up blocked! Kripya pop-ups allow karein.");
+        return;
+    }
+
+    let grandTotalAmount = mySoldItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    let grandTotalQty = mySoldItems.reduce((sum, item) => sum + item.quantity, 0);
+
     let htmlContent = `
         <html>
         <head>
-            <title>${postalName} - Sold Items Report</title>
+            <title>${postalName} - Real-Time Sold Report</title>
             <style>
-                body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
-                h2 { color: #0b3c65; text-align: center; border-bottom: 2px solid #0b3c65; padding-bottom: 10px; }
-                .item { border: 1px solid #ddd; padding: 12px; margin-bottom: 10px; border-radius: 6px; background: #f9f9f9; }
-                .item p { margin: 4px 0; font-size: 14px; }
-                .total { font-weight: bold; color: #166534; }
+                body { font-family: Arial, sans-serif; padding: 25px; color: #222; }
+                h2 { color: #0b3c65; text-align: center; border-bottom: 2px solid #0b3c65; padding-bottom: 8px; }
+                .meta { margin-bottom: 20px; font-size: 14px; color: #555; }
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 13px; }
+                th { background-color: #f1f5f9; color: #0f172a; }
+                .total-box { margin-top: 20px; padding: 15px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; text-align: right; }
+                .total-box p { margin: 5px 0; font-size: 16px; font-weight: bold; color: #166534; }
             </style>
         </head>
         <body>
-            <h2>🏪 ${postalName} - Sold History Report</h2>
-            <p><strong>Generated On:</strong> ${new Date().toLocaleString()}</p>
-            <hr style="margin-bottom: 20px;"/>
+            <h2>🏪 ${postalName} - Real-Time Sold Items Report</h2>
+            <div class="meta">
+                <p><strong>Dukandaar:</strong> ${loggedInUserName}</p>
+                <p><strong>Report Generated On:</strong> ${new Date().toLocaleString()}</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Item Name</th>
+                        <th>Date & Time</th>
+                        <th>MRP (Per Unit)</th>
+                        <th>Qty</th>
+                        <th>Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
     `;
 
     mySoldItems.forEach((sold, index) => {
         htmlContent += `
-            <div class="item">
-                <p><strong>#${index + 1} - ${sold.itemName}</strong></p>
-                <p>Quantity: ${sold.quantity} Unit | Per Unit MRP: ₹${sold.itemPrice}</p>
-                <p class="total">Total Price: ₹${sold.totalPrice}</p>
-                <p>Customer: ${sold.customerName} (${sold.customerAddress})</p>
-                <p><small>Date: ${sold.date} | Time: ${sold.time}</small></p>
-            </div>
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong>${sold.itemName}</strong><br><small style="color:#64748b;">Customer: ${sold.customerName}</small></td>
+                <td>${sold.date} <br> ${sold.time}</td>
+                <td>₹${sold.itemPrice}</td>
+                <td>${sold.quantity}</td>
+                <td><strong>₹${sold.totalPrice}</strong></td>
+            </tr>
         `;
     });
 
     htmlContent += `
+                </tbody>
+            </table>
+            <div class="total-box">
+                <p>Total Items Sold Quantity: ${grandTotalQty} Units</p>
+                <p style="font-size: 18px; color: #0b3c65;">Grand Total Real-Time Revenue: ₹${grandTotalAmount}</p>
+            </div>
         </body>
         </html>
     `;
@@ -804,7 +834,7 @@ function downloadShopReportPDF() {
     setTimeout(() => {
         printWindow.focus();
         printWindow.print();
-    }, 500);
+    }, 600);
 }
 
 function openTrackOrderModal() {
