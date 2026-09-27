@@ -481,7 +481,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
     }
 }
 
@@ -515,6 +515,19 @@ function captureShopWebcamPhoto() {
         shopCameraStream.getTracks().forEach(track => track.stop());
     }
     document.getElementById('shop-camera-box').style.display = 'none';
+}
+
+// Gallery / Downloaded Pic Upload Function for Dukandaar
+function handleShopUploadedImage(event) {
+    let file = event.target.files[0];
+    if(file) {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            capturedWebcamDataUrl = e.target.result;
+            document.getElementById('shop-captured-preview').innerHTML = `<img src="${capturedWebcamDataUrl}" style="width: 70px; height: 70px; border-radius: 6px; object-fit: cover; border: 1px solid #cbd5e1;"> <span style="font-size:0.75rem; color:var(--success); font-weight:bold;">Gallery Pic Attached ✅</span>`;
+        }
+        reader.readAsDataURL(file);
+    }
 }
 
 function switchShopTab(tabName) {
@@ -797,7 +810,7 @@ function postProduct() {
         saveNewProduct(name, price, capturedWebcamDataUrl);
         capturedWebcamDataUrl = "";
         document.getElementById('shop-captured-preview').innerHTML = '';
-    } else if(imageInput.files && imageInput.files[0]) {
+    } else if(imageInput && imageInput.files && imageInput.files[0]) {
         let reader = new FileReader();
         reader.onload = function(e) {
             saveNewProduct(name, price, e.target.result);
@@ -833,7 +846,9 @@ function saveNewProduct(name, price, imageUrl) {
 
     document.getElementById('product-name').value = '';
     document.getElementById('product-price').value = '';
-    document.getElementById('product-image-input').value = '';
+    if(document.getElementById('product-image-input')) {
+        document.getElementById('product-image-input').value = '';
+    }
 
     updateShopLiveItemsUI();
 }
