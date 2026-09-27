@@ -35,15 +35,15 @@ window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('screen-customer-home').classList.add('active');
             loadStoreFilterBar();
             loadCustomerProducts();
-            document.getElementById('order-customer-name').value = loggedInUserName;
-            document.getElementById('order-customer-phone').value = loggedInUserPhone;
+            if(document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = loggedInUserName;
+            if(document.getElementById('order-customer-phone')) document.getElementById('order-customer-phone').value = loggedInUserPhone;
         } else {
             document.getElementById('shop-name-display').innerText = postalName;
             document.getElementById('screen-shop-dashboard').classList.add('active');
             updateShopLiveItemsUI();
             updateShopReceivedOrdersUI();
             updateShopSoldItemsUI();
-            injectGalleryButtonIntoShopUI(); // Blue button injection
+            injectGalleryButtonIntoShopUI();
         }
     }
 });
@@ -242,8 +242,8 @@ function verifyAndCompleteRegistration() {
             document.getElementById('screen-customer-home').classList.add('active');
             loadStoreFilterBar();
             loadCustomerProducts();
-            document.getElementById('order-customer-name').value = loggedInUserName;
-            document.getElementById('order-customer-phone').value = loggedInUserPhone;
+            if(document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = loggedInUserName;
+            if(document.getElementById('order-customer-phone')) document.getElementById('order-customer-phone').value = loggedInUserPhone;
         } else {
             document.getElementById('shop-name-display').innerText = postalName;
             document.getElementById('screen-shop-dashboard').classList.add('active');
@@ -289,8 +289,8 @@ function executeLogin() {
             document.getElementById('screen-customer-home').classList.add('active');
             loadStoreFilterBar();
             loadCustomerProducts();
-            document.getElementById('order-customer-name').value = loggedInUserName;
-            document.getElementById('order-customer-phone').value = loggedInUserPhone;
+            if(document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = loggedInUserName;
+            if(document.getElementById('order-customer-phone')) document.getElementById('order-customer-phone').value = loggedInUserPhone;
         } else {
             document.getElementById('shop-name-display').innerText = postalName;
             document.getElementById('screen-shop-dashboard').classList.add('active');
@@ -415,13 +415,17 @@ function updateCartSummary() {
 function placeOrder() {
     let itemsArr = Object.values(cart);
     if(itemsArr.length === 0) {
-        alert("Aapka cart khali hai!");
+        alert("Aapka cart khali hai! Kripya pehle items add karein.");
         return;
     }
 
-    let custName = document.getElementById('order-customer-name').value.trim();
-    let custPhone = document.getElementById('order-customer-phone').value.trim();
-    let custAddress = document.getElementById('order-customer-address').value.trim();
+    let nameInput = document.getElementById('order-customer-name');
+    let phoneInput = document.getElementById('order-customer-phone');
+    let addressInput = document.getElementById('order-customer-address');
+
+    let custName = nameInput ? nameInput.value.trim() : loggedInUserName;
+    let custPhone = phoneInput ? phoneInput.value.trim() : loggedInUserPhone;
+    let custAddress = addressInput ? addressInput.value.trim() : "";
 
     if(!custName || !custPhone || custPhone.length < 10 || !custAddress) {
         alert("⚠️ Kripya apna poora naam, sahi 10-digit mobile number aur local address bharna anivarya hai!");
@@ -447,11 +451,12 @@ function placeOrder() {
     let allOrders = JSON.parse(localStorage.getItem('sm_allOrders')) || [];
     allOrders.push(newOrder);
     localStorage.setItem('sm_allOrders', JSON.stringify(allOrders));
+    
     alert("🛒 Order successfully place ho gaya!");
 
     cart = {};
     updateCartSummary();
-    document.getElementById('order-customer-address').value = '';
+    if(addressInput) addressInput.value = '';
 
     startShopkeeperAlarm();
     updateShopReceivedOrdersUI();
@@ -484,7 +489,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
     }
 }
 
@@ -520,12 +525,10 @@ function captureShopWebcamPhoto() {
     document.getElementById('shop-camera-box').style.display = 'none';
 }
 
-// Blue color Select Pic from Gallery Button Injector function
 function injectGalleryButtonIntoShopUI() {
     let previewBox = document.getElementById('shop-captured-preview');
     if(!previewBox) return;
 
-    // Check if blue gallery button already exists to prevent duplication
     if(document.getElementById('custom-blue-gallery-btn')) return;
 
     let containerDiv = document.createElement('div');
@@ -539,14 +542,12 @@ function injectGalleryButtonIntoShopUI() {
     previewBox.parentNode.insertBefore(containerDiv, previewBox);
 }
 
-// Gallery / File Picker Image Handling Function (Selected picture will appear immediately)
 function handleShopUploadedImage(event) {
     let file = event.target.files[0];
     if(file) {
         let reader = new FileReader();
         reader.onload = function(e) {
             capturedWebcamDataUrl = e.target.result;
-            // Sirf wahi pic dikhegi jo user ne gallery se select ki hai
             document.getElementById('shop-captured-preview').innerHTML = `
                 <img src="${capturedWebcamDataUrl}" style="width: 70px; height: 70px; border-radius: 6px; object-fit: cover; border: 1px solid #cbd5e1;"> 
                 <span style="font-size:0.75rem; color:var(--success); font-weight:bold;">Gallery Pic Attached ✅</span>
