@@ -40,7 +40,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Real-time sync listener across tabs/views
+// Real-time sync listener across tabs/views & custom event
 window.addEventListener('storage', (e) => {
     if(e.key === 'sm_liveProducts') {
         if(currentRole === 'customer' && document.getElementById('screen-customer-home').classList.contains('active')) {
@@ -52,6 +52,13 @@ window.addEventListener('storage', (e) => {
     }
     if(e.key === 'sm_allOrders' && currentRole === 'shopkeeper' && document.getElementById('screen-shop-dashboard').classList.contains('active')) {
         updateShopReceivedOrdersUI();
+    }
+});
+
+window.addEventListener('sm_productUpdated', () => {
+    if(currentRole === 'customer' && document.getElementById('screen-customer-home').classList.contains('active')) {
+        loadStoreFilterBar();
+        loadCustomerProducts();
     }
 });
 
@@ -219,7 +226,6 @@ function verifyAndCompleteRegistration() {
         localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
         localStorage.setItem('sm_isLoggedIn', 'true');
 
-        // EmailJS integration check
         if(typeof emailjs !== 'undefined') {
             let templateParams = {
                 user_name: loggedInUserName,
@@ -333,6 +339,9 @@ function loadCustomerProducts() {
     if(!gridContainer) return;
     gridContainer.innerHTML = '';
 
+    let searchInput = document.getElementById('customer-search-input');
+    let searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : "";
+
     let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [
         { id: 1, name: "Aashirvaad Atta (5kg)", price: 240, shop: "Gupta Kirana Store", shopLat: 28.4750, shopLng: 77.5050, image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80" },
         { id: 2, name: "Fortune Sunflower Oil (1L)", price: 130, shop: "Sharma General Store", shopLat: 28.4800, shopLng: 77.5100, image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=200&q=80" }
@@ -349,8 +358,15 @@ function loadCustomerProducts() {
         nearbyProducts = nearbyProducts.filter(p => p.shop === selectedStoreFilter);
     }
 
+    if(searchQuery !== "") {
+        nearbyProducts = nearbyProducts.filter(p => 
+            p.name.toLowerCase().includes(searchQuery) || 
+            p.shop.toLowerCase().includes(searchQuery)
+        );
+    }
+
     if(nearbyProducts.length === 0) {
-        gridContainer.innerHTML = '<p style="font-size: 0.8rem; color: #777; text-align: center;">Aapke 2 km ke daayre mein abhi koi dukan ya item live nahi hai.</p>';
+        gridContainer.innerHTML = '<p style="font-size: 0.8rem; color: #777; text-align: center; grid-column: 1 / -1;">Aapke search ya daayre se milta-julta koi item nahi mila.</p>';
         return;
     }
 
@@ -761,6 +777,9 @@ function saveNewProduct(name, price, imageUrl) {
     let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
     liveProducts.push(newProd);
     localStorage.setItem('sm_liveProducts', JSON.stringify(liveProducts));
+
+    // ⚡ Real-time Custom Event fire karne ke liye taaki bina page refresh kiye dikhe
+    window.dispatchEvent(new Event('sm_productUpdated'));
 
     alert("✨ Product turant live stock mein jud gaya hai!");
 
