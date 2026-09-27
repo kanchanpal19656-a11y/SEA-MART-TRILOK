@@ -159,7 +159,7 @@ function showRegistrationScreen() {
     document.getElementById('screen-mode-choice').classList.remove('active');
     document.getElementById('screen-login').classList.remove('active');
     document.getElementById('screen-registration').classList.add('active');
-    document.getElementById('reg-heading').innerText = (currentRole === 'customer') ? "Customer Registration" : "Dukandaar Registration";
+    document.getElementById('reg-heading').innerText = (currentRole === 'customer') ? "Customer Registration" : "Dukandaار Registration";
 
     if(currentRole === 'shopkeeper') {
         document.getElementById('shopkeeper-reg-fields').style.display = 'block';
@@ -481,7 +481,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
     }
 }
 
@@ -517,13 +517,14 @@ function captureShopWebcamPhoto() {
     document.getElementById('shop-camera-box').style.display = 'none';
 }
 
-// Gallery / Downloaded Pic Upload Function for Dukandaar
+// Gallery / Downloaded Pic Upload Function (Ab live pic screen par preview dikhayega)
 function handleShopUploadedImage(event) {
     let file = event.target.files[0];
     if(file) {
         let reader = new FileReader();
         reader.onload = function(e) {
             capturedWebcamDataUrl = e.target.result;
+            // Ab gallery wali pic bhi turant live pic ke preview box mein dikhegi
             document.getElementById('shop-captured-preview').innerHTML = `<img src="${capturedWebcamDataUrl}" style="width: 70px; height: 70px; border-radius: 6px; object-fit: cover; border: 1px solid #cbd5e1;"> <span style="font-size:0.75rem; color:var(--success); font-weight:bold;">Gallery Pic Attached ✅</span>`;
         }
         reader.readAsDataURL(file);
@@ -797,7 +798,6 @@ function backToCustomerHome() {
 function postProduct() {
     let name = document.getElementById('product-name').value.trim();
     let price = document.getElementById('product-price').value.trim();
-    let imageInput = document.getElementById('product-image-input');
 
     if(!name || !price) {
         alert("Kripya product ka naam aur price daalein!");
@@ -810,12 +810,6 @@ function postProduct() {
         saveNewProduct(name, price, capturedWebcamDataUrl);
         capturedWebcamDataUrl = "";
         document.getElementById('shop-captured-preview').innerHTML = '';
-    } else if(imageInput && imageInput.files && imageInput.files[0]) {
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            saveNewProduct(name, price, e.target.result);
-        }
-        reader.readAsDataURL(imageInput.files[0]);
     } else {
         saveNewProduct(name, price, defaultImg);
     }
