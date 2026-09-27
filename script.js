@@ -219,7 +219,7 @@ function verifyAndCompleteRegistration() {
         localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
         localStorage.setItem('sm_isLoggedIn', 'true');
 
-        // EmailJS optional integration check
+        // EmailJS integration check
         if(typeof emailjs !== 'undefined') {
             let templateParams = {
                 user_name: loggedInUserName,
@@ -716,6 +716,8 @@ function openTrackOrderModal() {
 function backToCustomerHome() {
     document.getElementById('screen-track-order').classList.remove('active');
     document.getElementById('screen-customer-home').classList.add('active');
+    loadStoreFilterBar();
+    loadCustomerProducts();
 }
 
 function postProduct() {
