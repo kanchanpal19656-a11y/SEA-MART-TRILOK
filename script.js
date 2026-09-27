@@ -1,4 +1,4 @@
- let currentRole = localStorage.getItem('sm_currentRole') || 'customer';
+let currentRole = localStorage.getItem('sm_currentRole') || 'customer';
 let postalName = localStorage.getItem('sm_postalName') || "Gupta Kirana Store";
 let loggedInUserName = localStorage.getItem('sm_userName') || "Rajan Pal";
 let loggedInUserPhone = localStorage.getItem('sm_userPhone') || "9876543210";
@@ -8,7 +8,6 @@ let selectedStoreFilter = "All";
 let currentLat = 28.4744;
 let currentLng = 77.5040;
 
-// LocalStorage se registered users load karein, agar nahi hain toh default use karein
 let defaultUsers = [
     { phone: "9876543210", email: "rajan@example.com", password: "123", name: "Rajan Pal", role: "customer", lat: 28.4744, lng: 77.5040 },
     { phone: "9123456789", email: "gupta@example.com", password: "123", name: "Ramesh Gupta", role: "shopkeeper", shopName: "Gupta Kirana Store", lat: 28.4750, lng: 77.5050 }
@@ -16,20 +15,11 @@ let defaultUsers = [
 let registeredUsers = JSON.parse(localStorage.getItem('sm_registeredUsers')) || defaultUsers;
 
 let cart = {};
-let allOrders = JSON.parse(localStorage.getItem('sm_allOrders')) || [];
-let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
-
-let defaultProducts = [
-    { id: 1, name: "Aashirvaad Atta (5kg)", price: 240, shop: "Gupta Kirana Store", shopLat: 28.4750, shopLng: 77.5050, image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80" },
-    { id: 2, name: "Fortune Sunflower Oil (1L)", price: 130, shop: "Sharma General Store", shopLat: 28.4800, shopLng: 77.5100, image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=200&q=80" }
-];
-let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || defaultProducts;
-
 let alertInterval = null;
 let shopCameraStream = null;
 let capturedWebcamDataUrl = "";
 
-// Page load hone par check karein ki kya user pehle se logged-in tha
+// Page load hone par check karein
 window.addEventListener('DOMContentLoaded', () => {
     let isLoggedIn = localStorage.getItem('sm_isLoggedIn');
     if(isLoggedIn === 'true') {
@@ -47,6 +37,21 @@ window.addEventListener('DOMContentLoaded', () => {
             updateShopReceivedOrdersUI();
             updateShopSoldItemsUI();
         }
+    }
+});
+
+// Real-time sync listener across tabs/views
+window.addEventListener('storage', (e) => {
+    if(e.key === 'sm_liveProducts') {
+        if(currentRole === 'customer' && document.getElementById('screen-customer-home').classList.contains('active')) {
+            loadStoreFilterBar();
+            loadCustomerProducts();
+        } else if(currentRole === 'shopkeeper' && document.getElementById('screen-shop-dashboard').classList.contains('active')) {
+            updateShopLiveItemsUI();
+        }
+    }
+    if(e.key === 'sm_allOrders' && currentRole === 'shopkeeper' && document.getElementById('screen-shop-dashboard').classList.contains('active')) {
+        updateShopReceivedOrdersUI();
     }
 });
 
@@ -93,7 +98,7 @@ function updateCustomAvatar(event) {
         let reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('drawer-user-avatar').src = e.target.result;
-            alert("✨ Profile photo safaltapoorvak update ho gayi!");
+            alert("✨ Profile photo update ho gayi!");
         }
         reader.readAsDataURL(file);
     }
@@ -132,7 +137,7 @@ function showLoginScreen() {
     document.getElementById('screen-mode-choice').classList.remove('active');
     document.getElementById('screen-registration').classList.remove('active');
     document.getElementById('screen-login').classList.add('active');
-    document.getElementById('login-heading').innerText = (currentRole === 'customer') ? "Customer Login" : "Dukandaار Login";
+    document.getElementById('login-heading').innerText = (currentRole === 'customer') ? "Customer Login" : "Dukandaar Login";
 }
 
 function showRegistrationScreen() {
@@ -214,6 +219,18 @@ function verifyAndCompleteRegistration() {
         localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
         localStorage.setItem('sm_isLoggedIn', 'true');
 
+        // EmailJS optional integration check
+        if(typeof emailjs !== 'undefined') {
+            let templateParams = {
+                user_name: loggedInUserName,
+                user_phone: loggedInUserPhone,
+                user_email: loggedInUserEmail,
+                user_role: currentRole,
+                shop_name: postalName || "N/A"
+            };
+            emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams).catch(err => {});
+        }
+
         alert("🎉 Registration Safal Raha!");
         document.getElementById('screen-registration').classList.remove('active');
 
@@ -284,6 +301,11 @@ function loadStoreFilterBar() {
     if(!bar) return;
     bar.innerHTML = '';
 
+    let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [
+        { id: 1, name: "Aashirvaad Atta (5kg)", price: 240, shop: "Gupta Kirana Store", shopLat: 28.4750, shopLng: 77.5050, image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80" },
+        { id: 2, name: "Fortune Sunflower Oil (1L)", price: 130, shop: "Sharma General Store", shopLat: 28.4800, shopLng: 77.5100, image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=200&q=80" }
+    ];
+
     let nearbyProducts = liveProducts.filter(p => {
         let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
         p.calculatedDistanceNum = dist;
@@ -310,6 +332,11 @@ function loadCustomerProducts() {
     let gridContainer = document.getElementById('customer-product-grid');
     if(!gridContainer) return;
     gridContainer.innerHTML = '';
+
+    let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [
+        { id: 1, name: "Aashirvaad Atta (5kg)", price: 240, shop: "Gupta Kirana Store", shopLat: 28.4750, shopLng: 77.5050, image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80" },
+        { id: 2, name: "Fortune Sunflower Oil (1L)", price: 130, shop: "Sharma General Store", shopLat: 28.4800, shopLng: 77.5100, image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=200&q=80" }
+    ];
 
     let nearbyProducts = liveProducts.filter(p => {
         let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
@@ -348,6 +375,7 @@ function loadCustomerProducts() {
 }
 
 function updateCartQty(productId, change) {
+    let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
     let prod = liveProducts.find(p => p.id === productId);
     if(!prod) return;
 
@@ -408,6 +436,7 @@ function placeOrder() {
         shopName: itemsArr[0].shop
     };
 
+    let allOrders = JSON.parse(localStorage.getItem('sm_allOrders')) || [];
     allOrders.push(newOrder);
     localStorage.setItem('sm_allOrders', JSON.stringify(allOrders));
     alert("🛒 Order successfully place ho gaya!");
@@ -447,7 +476,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
     }
 }
 
@@ -506,7 +535,9 @@ function updateShopLiveItemsUI() {
     if(!box) return;
     box.innerHTML = '';
 
+    let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
     let myLiveProducts = liveProducts.filter(p => p.shop === postalName);
+    
     if(myLiveProducts.length === 0) {
         box.innerHTML = '<p style="font-size: 0.78rem; color: #777; text-align: center;">Abhi aapka koi item live nahi hai.</p>';
         return;
@@ -534,7 +565,9 @@ function updateShopReceivedOrdersUI() {
     if(!box) return;
     box.innerHTML = '';
 
+    let allOrders = JSON.parse(localStorage.getItem('sm_allOrders')) || [];
     let myShopOrders = allOrders.filter(o => o.shopName === postalName);
+
     if(myShopOrders.length === 0) {
         box.innerHTML = '<p style="font-size: 0.78rem; color: #777; text-align: center;">Abhi koi naya order nahi aaya hai.</p>';
         return;
@@ -574,6 +607,9 @@ function updateShopReceivedOrdersUI() {
 function verifyDeliveryOtp(orderId) {
     let inputField = document.getElementById(`shop-otp-input-${orderId}`);
     let enteredOtp = inputField ? inputField.value.trim() : '';
+
+    let allOrders = JSON.parse(localStorage.getItem('sm_allOrders')) || [];
+    let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
 
     let ord = allOrders.find(o => o.id === orderId);
     if(ord) {
@@ -616,7 +652,9 @@ function updateShopSoldItemsUI() {
     if(!box) return;
     box.innerHTML = '';
 
+    let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
     let mySoldItems = soldItemsHistory.filter(s => s.shopName === postalName);
+
     if(mySoldItems.length === 0) {
         box.innerHTML = '<p style="font-size: 0.78rem; color: #777; text-align: center;">Abhi tak koi item nahi becha gaya hai.</p>';
         return;
@@ -641,77 +679,6 @@ function updateShopSoldItemsUI() {
     });
 }
 
-function downloadSoldItemsPDF() {
-    let mySoldItems = soldItemsHistory.filter(s => s.shopName === postalName);
-    if(mySoldItems.length === 0) {
-        alert("⚠️ Download karne ke liye koi history nahi hai!");
-        return;
-    }
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.setTextColor(11, 60, 101);
-    doc.text("SEA MART - Sold Items Report", 14, 20);
-
-    doc.setFontSize(11);
-    doc.setTextColor(80, 80, 80);
-    doc.text(`Shop Name: ${postalName}`, 14, 28);
-    doc.text(`Generated Date: ${new Date().toLocaleDateString()}`, 14, 34);
-
-    let y = 45;
-    let totalQuantitySold = 0;
-    let grandTotalAmount = 0;
-
-    mySoldItems.forEach((item, index) => {
-        if(y > 270) {
-            doc.addPage();
-            y = 20;
-        }
-
-        doc.setFillColor(248, 250, 252);
-        doc.rect(14, y - 5, 182, 32, 'F');
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`${index + 1}. Item Name: ${item.itemName}`, 18, y);
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.text(`MRP / Unit: ₹${item.itemPrice}`, 18, y + 6);
-        doc.text(`Quantity: ${item.quantity}`, 110, y + 6);
-        doc.text(`Total MRP: ₹${item.totalPrice}`, 150, y + 6);
-
-        doc.text(`Address: ${item.customerName} - ${item.customerAddress}`, 18, y + 12);
-        doc.text(`Date & Time: ${item.date} at ${item.time}`, 18, y + 18);
-
-        totalQuantitySold += item.quantity;
-        grandTotalAmount += item.totalPrice;
-        y += 38;
-    });
-
-    if(y > 250) {
-        doc.addPage();
-        y = 20;
-    }
-
-    doc.setLineWidth(0.5);
-    doc.line(14, y, 196, y);
-    y += 6;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(11, 60, 101);
-    doc.text(`Total Quantity Sold: ${totalQuantitySold} Units`, 14, y);
-    doc.text(`Grand Total MRP: ₹${grandTotalAmount}`, 130, y);
-
-    doc.save(`Sold_Items_Report_${postalName.replace(/\s+/g, '_')}.pdf`);
-    alert("📄 Sold items ki PDF download ho gayi hai!");
-}
-
 function openTrackOrderModal() {
     document.getElementById('screen-customer-home').classList.remove('active');
     document.getElementById('screen-track-order').classList.add('active');
@@ -719,6 +686,7 @@ function openTrackOrderModal() {
     let listContainer = document.getElementById('track-order-list');
     listContainer.innerHTML = '';
 
+    let allOrders = JSON.parse(localStorage.getItem('sm_allOrders')) || [];
     if(allOrders.length === 0) {
         listContainer.innerHTML = '<p style="font-size: 0.8rem; color: #777; text-align: center;">Aapne abhi tak koi order nahi diya hai.</p>';
         return;
@@ -788,20 +756,17 @@ function saveNewProduct(name, price, imageUrl) {
         image: imageUrl
     };
 
+    let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
     liveProducts.push(newProd);
     localStorage.setItem('sm_liveProducts', JSON.stringify(liveProducts));
 
-    alert("✨ Product live stock mein jud gaya hai!");
+    alert("✨ Product turant live stock mein jud gaya hai!");
 
     document.getElementById('product-name').value = '';
     document.getElementById('product-price').value = '';
     document.getElementById('product-image-input').value = '';
 
     updateShopLiveItemsUI();
-    if(currentRole === 'customer') {
-        loadStoreFilterBar();
-        loadCustomerProducts();
-    }
 }
 
 function logout() {
