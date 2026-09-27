@@ -43,6 +43,7 @@ window.addEventListener('DOMContentLoaded', () => {
             updateShopLiveItemsUI();
             updateShopReceivedOrdersUI();
             updateShopSoldItemsUI();
+            injectGalleryButtonIntoShopUI(); // Blue button injection
         }
     }
 });
@@ -249,6 +250,7 @@ function verifyAndCompleteRegistration() {
             updateShopLiveItemsUI();
             updateShopReceivedOrdersUI();
             updateShopSoldItemsUI();
+            injectGalleryButtonIntoShopUI();
         }
     });
 }
@@ -295,6 +297,7 @@ function executeLogin() {
             updateShopLiveItemsUI();
             updateShopReceivedOrdersUI();
             updateShopSoldItemsUI();
+            injectGalleryButtonIntoShopUI();
         }
     });
 }
@@ -481,7 +484,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
     }
 }
 
@@ -517,7 +520,26 @@ function captureShopWebcamPhoto() {
     document.getElementById('shop-camera-box').style.display = 'none';
 }
 
-// Gallery / File Picker Image Handling Function (Ab strictly user ki select ki hui pic hi aayegi)
+// Blue color Select Pic from Gallery Button Injector function
+function injectGalleryButtonIntoShopUI() {
+    let previewBox = document.getElementById('shop-captured-preview');
+    if(!previewBox) return;
+
+    // Check if blue gallery button already exists to prevent duplication
+    if(document.getElementById('custom-blue-gallery-btn')) return;
+
+    let containerDiv = document.createElement('div');
+    containerDiv.style.margin = '8px 0';
+    containerDiv.innerHTML = `
+        <input type="file" id="shop-custom-gallery-input" accept="image/*" style="display: none;" onchange="handleShopUploadedImage(event)">
+        <button id="custom-blue-gallery-btn" type="button" onclick="document.getElementById('shop-custom-gallery-input').click()" style="background-color: #2563eb; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; width: 100%; justify-content: center;">
+            📁 Select Pic from Gallery
+        </button>
+    `;
+    previewBox.parentNode.insertBefore(containerDiv, previewBox);
+}
+
+// Gallery / File Picker Image Handling Function (Selected picture will appear immediately)
 function handleShopUploadedImage(event) {
     let file = event.target.files[0];
     if(file) {
@@ -542,6 +564,7 @@ function switchShopTab(tabName) {
     if(tabName === 'stock') {
         document.getElementById('shop-sub-stock').classList.add('active-sub');
         updateShopLiveItemsUI();
+        setTimeout(injectGalleryButtonIntoShopUI, 100);
     } else if(tabName === 'order') {
         document.getElementById('shop-sub-order').classList.add('active-sub');
         stopAlertBeep();
@@ -797,7 +820,6 @@ function backToCustomerHome() {
     loadCustomerProducts();
 }
 
-// Product post karne ka updated function (Ab ye sirf wahi pic lega jo user ne live ya gallery se select ki hai)
 function postProduct() {
     let name = document.getElementById('product-name').value.trim();
     let price = document.getElementById('product-price').value.trim();
@@ -808,7 +830,7 @@ function postProduct() {
     }
 
     if(!capturedWebcamDataUrl) {
-        alert("⚠️ Kripya pehle camera se live photo lein ya gallery se pic select karein!");
+        alert("⚠️ Kripya pehle camera se live photo lein ya blue button dabakar gallery se pic select karein!");
         return;
     }
 
