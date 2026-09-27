@@ -1,30 +1,54 @@
-let currentRole = 'customer';
-let postalName = "Gupta Kirana Store";
-let loggedInUserName = "Rajan Pal";
-let loggedInUserPhone = "9876543210";
-let loggedInUserEmail = "rajan@example.com";
+ let currentRole = localStorage.getItem('sm_currentRole') || 'customer';
+let postalName = localStorage.getItem('sm_postalName') || "Gupta Kirana Store";
+let loggedInUserName = localStorage.getItem('sm_userName') || "Rajan Pal";
+let loggedInUserPhone = localStorage.getItem('sm_userPhone') || "9876543210";
+let loggedInUserEmail = localStorage.getItem('sm_userEmail') || "rajan@example.com";
 let selectedStoreFilter = "All";
 
 let currentLat = 28.4744;
 let currentLng = 77.5040;
 
-let registeredUsers = [
+// LocalStorage se registered users load karein, agar nahi hain toh default use karein
+let defaultUsers = [
     { phone: "9876543210", email: "rajan@example.com", password: "123", name: "Rajan Pal", role: "customer", lat: 28.4744, lng: 77.5040 },
     { phone: "9123456789", email: "gupta@example.com", password: "123", name: "Ramesh Gupta", role: "shopkeeper", shopName: "Gupta Kirana Store", lat: 28.4750, lng: 77.5050 }
 ];
+let registeredUsers = JSON.parse(localStorage.getItem('sm_registeredUsers')) || defaultUsers;
 
 let cart = {};
-let allOrders = [];
-let soldItemsHistory = [];
+let allOrders = JSON.parse(localStorage.getItem('sm_allOrders')) || [];
+let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
 
-let liveProducts = [
+let defaultProducts = [
     { id: 1, name: "Aashirvaad Atta (5kg)", price: 240, shop: "Gupta Kirana Store", shopLat: 28.4750, shopLng: 77.5050, image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80" },
     { id: 2, name: "Fortune Sunflower Oil (1L)", price: 130, shop: "Sharma General Store", shopLat: 28.4800, shopLng: 77.5100, image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=200&q=80" }
 ];
+let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || defaultProducts;
 
 let alertInterval = null;
 let shopCameraStream = null;
 let capturedWebcamDataUrl = "";
+
+// Page load hone par check karein ki kya user pehle se logged-in tha
+window.addEventListener('DOMContentLoaded', () => {
+    let isLoggedIn = localStorage.getItem('sm_isLoggedIn');
+    if(isLoggedIn === 'true') {
+        document.getElementById('screen-welcome').classList.remove('active');
+        if(currentRole === 'customer') {
+            document.getElementById('screen-customer-home').classList.add('active');
+            loadStoreFilterBar();
+            loadCustomerProducts();
+            document.getElementById('order-customer-name').value = loggedInUserName;
+            document.getElementById('order-customer-phone').value = loggedInUserPhone;
+        } else {
+            document.getElementById('shop-name-display').innerText = postalName;
+            document.getElementById('screen-shop-dashboard').classList.add('active');
+            updateShopLiveItemsUI();
+            updateShopReceivedOrdersUI();
+            updateShopSoldItemsUI();
+        }
+    }
+});
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
     let R = 6371;
@@ -87,6 +111,7 @@ function backToWelcome() {
 
 function openModeSelection(role) {
     currentRole = role;
+    localStorage.setItem('sm_currentRole', role);
     document.getElementById('screen-role-selection').classList.remove('active');
     document.getElementById('screen-mode-choice').classList.add('active');
     document.getElementById('mode-title').innerText = (role === 'customer') ? "Customer Options" : "Dukandaar Options";
@@ -107,7 +132,7 @@ function showLoginScreen() {
     document.getElementById('screen-mode-choice').classList.remove('active');
     document.getElementById('screen-registration').classList.remove('active');
     document.getElementById('screen-login').classList.add('active');
-    document.getElementById('login-heading').innerText = (currentRole === 'customer') ? "Customer Login" : "Dukandaar Login";
+    document.getElementById('login-heading').innerText = (currentRole === 'customer') ? "Customer Login" : "Dukandaار Login";
 }
 
 function showRegistrationScreen() {
@@ -149,11 +174,16 @@ function generateAndShowOTP() {
             return;
         }
         postalName = sName;
+        localStorage.setItem('sm_postalName', postalName);
     }
 
     loggedInUserName = name;
     loggedInUserPhone = phone;
     loggedInUserEmail = email;
+
+    localStorage.setItem('sm_userName', name);
+    localStorage.setItem('sm_userPhone', phone);
+    localStorage.setItem('sm_userEmail', email);
 
     let serverOTP = Math.floor(100000 + Math.random() * 900000).toString();
     document.getElementById('generated-otp-text').innerText = serverOTP;
@@ -169,7 +199,7 @@ function verifyAndCompleteRegistration() {
     }
 
     fetchUserLiveLocation(() => {
-        registeredUsers.push({
+        let newUser = {
             phone: loggedInUserPhone,
             email: loggedInUserEmail,
             password: pass,
@@ -178,7 +208,11 @@ function verifyAndCompleteRegistration() {
             shopName: postalName,
             lat: currentLat,
             lng: currentLng
-        });
+        };
+
+        registeredUsers.push(newUser);
+        localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
+        localStorage.setItem('sm_isLoggedIn', 'true');
 
         alert("🎉 Registration Safal Raha!");
         document.getElementById('screen-registration').classList.remove('active');
@@ -212,9 +246,18 @@ function executeLogin() {
     loggedInUserName = foundUser.name;
     loggedInUserPhone = foundUser.phone;
     loggedInUserEmail = foundUser.email;
-    if(foundUser.shopName) postalName = foundUser.shopName;
+    if(foundUser.shopName) {
+        postalName = foundUser.shopName;
+        localStorage.setItem('sm_postalName', postalName);
+    }
     if(foundUser.lat) currentLat = foundUser.lat;
     if(foundUser.lng) currentLng = foundUser.lng;
+
+    localStorage.setItem('sm_userName', loggedInUserName);
+    localStorage.setItem('sm_userPhone', loggedInUserPhone);
+    localStorage.setItem('sm_userEmail', loggedInUserEmail);
+    localStorage.setItem('sm_currentRole', currentRole);
+    localStorage.setItem('sm_isLoggedIn', 'true');
 
     fetchUserLiveLocation(() => {
         alert("🎉 Login Safal Raha!");
@@ -265,6 +308,7 @@ function loadStoreFilterBar() {
 
 function loadCustomerProducts() {
     let gridContainer = document.getElementById('customer-product-grid');
+    if(!gridContainer) return;
     gridContainer.innerHTML = '';
 
     let nearbyProducts = liveProducts.filter(p => {
@@ -326,8 +370,10 @@ function updateCartSummary() {
     let totalCount = itemsArr.reduce((sum, item) => sum + item.quantity, 0);
     let totalAmount = itemsArr.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    document.getElementById('cart-count').innerText = totalCount;
-    document.getElementById('cart-total').innerText = totalAmount;
+    let countEl = document.getElementById('cart-count');
+    let totalEl = document.getElementById('cart-total');
+    if(countEl) countEl.innerText = totalCount;
+    if(totalEl) totalEl.innerText = totalAmount;
 }
 
 function placeOrder() {
@@ -363,6 +409,7 @@ function placeOrder() {
     };
 
     allOrders.push(newOrder);
+    localStorage.setItem('sm_allOrders', JSON.stringify(allOrders));
     alert("🛒 Order successfully place ho gaya!");
 
     cart = {};
@@ -400,7 +447,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
     }
 }
 
@@ -551,6 +598,9 @@ function verifyDeliveryOtp(orderId) {
                     customerAddress: ord.customerAddress
                 });
             });
+
+            localStorage.setItem('sm_allOrders', JSON.stringify(allOrders));
+            localStorage.setItem('sm_soldHistory', JSON.stringify(soldItemsHistory));
 
             alert("🎉 Sahi OTP! Order delivered ho gaya.");
             updateShopReceivedOrdersUI();
@@ -723,7 +773,7 @@ function postProduct() {
         }
         reader.readAsDataURL(imageInput.files[0]);
     } else {
-        saveNewPassword = saveNewProduct(name, price, defaultImg);
+        saveNewProduct(name, price, defaultImg);
     }
 }
 
@@ -739,6 +789,8 @@ function saveNewProduct(name, price, imageUrl) {
     };
 
     liveProducts.push(newProd);
+    localStorage.setItem('sm_liveProducts', JSON.stringify(liveProducts));
+
     alert("✨ Product live stock mein jud gaya hai!");
 
     document.getElementById('product-name').value = '';
@@ -755,6 +807,7 @@ function saveNewProduct(name, price, imageUrl) {
 function logout() {
     stopAlertBeep();
     toggleProfileDrawer(false);
+    localStorage.removeItem('sm_isLoggedIn');
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-welcome').classList.add('active');
     cart = {};
