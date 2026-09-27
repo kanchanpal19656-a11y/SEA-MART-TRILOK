@@ -309,14 +309,12 @@ function loadStoreFilterBar() {
 
     let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
 
-    let nearbyProducts = liveProducts.filter(p => {
+    liveProducts.forEach(p => {
         let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
-        p.calculatedDistanceNum = dist;
         p.distanceText = dist.toFixed(1) + " km";
-        return dist <= 50.0;
     });
 
-    let stores = ["All", ...new Set(nearbyProducts.map(p => p.shop))];
+    let stores = ["All", ...new Set(liveProducts.map(p => p.shop))];
 
     stores.forEach(store => {
         let chip = document.createElement('div');
@@ -341,30 +339,30 @@ function loadCustomerProducts() {
 
     let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
 
-    let nearbyProducts = liveProducts.filter(p => {
+    liveProducts.forEach(p => {
         let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
-        p.calculatedDistanceNum = dist;
         p.distanceText = dist.toFixed(1) + " km";
-        return dist <= 50.0;
     });
 
+    let filteredProducts = liveProducts;
+
     if(selectedStoreFilter !== "All") {
-        nearbyProducts = nearbyProducts.filter(p => p.shop === selectedStoreFilter);
+        filteredProducts = filteredProducts.filter(p => p.shop === selectedStoreFilter);
     }
 
     if(searchQuery !== "") {
-        nearbyProducts = nearbyProducts.filter(p => 
+        filteredProducts = filteredProducts.filter(p => 
             p.name.toLowerCase().includes(searchQuery) || 
             p.shop.toLowerCase().includes(searchQuery)
         );
     }
 
-    if(nearbyProducts.length === 0) {
-        gridContainer.innerHTML = '<p style="font-size: 0.8rem; color: #777; text-align: center; grid-column: 1 / -1;">Aapke search ya daayre se milta-julta koi item nahi mila.</p>';
+    if(filteredProducts.length === 0) {
+        gridContainer.innerHTML = '<p style="font-size: 0.8rem; color: #777; text-align: center; grid-column: 1 / -1;">Abhi koi bhi live item uplabdh nahi hai.</p>';
         return;
     }
 
-    nearbyProducts.forEach(prod => {
+    filteredProducts.forEach(prod => {
         let qty = cart[prod.id] ? cart[prod.id].quantity : (cart[String(prod.id)] ? cart[String(prod.id)].quantity : 0);
         let card = document.createElement('div');
         card.className = 'customer-product-card';
@@ -772,7 +770,7 @@ function saveNewProduct(name, price, imageUrl) {
     liveProducts.push(newProd);
     localStorage.setItem('sm_liveProducts', JSON.stringify(liveProducts));
 
-    // ⚡ Real-time trigger for instant customer UI refresh
+    // Real-time trigger for instant customer UI refresh
     window.dispatchEvent(new Event('sm_productUpdated'));
     if(typeof loadCustomerProducts === 'function') {
         loadCustomerProducts();
