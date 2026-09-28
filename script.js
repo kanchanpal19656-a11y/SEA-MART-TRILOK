@@ -105,7 +105,6 @@ function toggleProfileDrawer(open, role = 'customer') {
         document.getElementById('drawer-user-role').innerText = (currentRole === 'shopkeeper' ? 'Dukandaar (Seller)' : 'Customer');
         drawer.classList.add('open');
         
-        // Kewal Dukandaar (Seller) ke profile drawer me UPI settings dikhengi, customer ke me nahi
         let upiBox = document.getElementById('profile-drawer-upi-box');
         if(upiBox) {
             upiBox.style.display = (currentRole === 'shopkeeper') ? 'block' : 'none';
@@ -316,26 +315,10 @@ function loadStoreFilterBar() {
     if(!bar) return;
     bar.innerHTML = '';
 
-    let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
-
-    liveProducts.forEach(p => {
-        let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
-        p.distanceText = dist.toFixed(1) + " km";
-    });
-
-    let stores = ["All", ...new Set(liveProducts.map(p => p.shop))];
-
-    stores.forEach(store => {
-        let chip = document.createElement('div');
-        chip.className = `store-chip ${selectedStoreFilter === store ? 'active-chip' : ''}`;
-        chip.innerText = store === 'All' ? '🏪 Sabhi Dukanen (All)' : `🏪 ${store}`;
-        chip.onclick = () => {
-            selectedStoreFilter = store;
-            loadStoreFilterBar();
-            loadCustomerProducts();
-        };
-        bar.appendChild(chip);
-    });
+    let chip = document.createElement('div');
+    chip.className = 'store-chip active-chip';
+    chip.innerText = '🏪 Sea Mart (2 km Radius)';
+    bar.appendChild(chip);
 }
 
 function loadCustomerProducts() {
@@ -348,26 +331,21 @@ function loadCustomerProducts() {
 
     let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
 
-    liveProducts.forEach(p => {
+    // Strict 2 km radius filter & distance calculation
+    let filteredProducts = liveProducts.filter(p => {
         let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
         p.distanceText = dist.toFixed(1) + " km";
+        return dist <= 2.0;
     });
-
-    let filteredProducts = liveProducts;
-
-    if(selectedStoreFilter !== "All") {
-        filteredProducts = filteredProducts.filter(p => p.shop === selectedStoreFilter);
-    }
 
     if(searchQuery !== "") {
         filteredProducts = filteredProducts.filter(p => 
-            p.name.toLowerCase().includes(searchQuery) || 
-            p.shop.toLowerCase().includes(searchQuery)
+            p.name.toLowerCase().includes(searchQuery)
         );
     }
 
     if(filteredProducts.length === 0) {
-        gridContainer.innerHTML = '<p style="font-size: 0.8rem; color: #777; text-align: center; grid-column: 1 / -1;">Abhi koi bhi live item uplabdh nahi hai.</p>';
+        gridContainer.innerHTML = '<p style="font-size: 0.8rem; color: #777; text-align: center; grid-column: 1 / -1;">2 km ke daayre mein abhi koi live item uplabdh nahi hai.</p>';
         return;
     }
 
@@ -380,7 +358,7 @@ function loadCustomerProducts() {
             <div class="customer-prod-info">
                 <h4>${prod.name}</h4>
                 <p style="color: #b45309; font-weight: bold;">₹${prod.price}</p>
-                <p style="font-size: 0.75rem;">🏪 ${prod.shop} • 📍 ${prod.distanceText}</p>
+                <p style="font-size: 0.75rem;">🏪 Sea Mart • 📍 ${prod.distanceText}</p>
             </div>
             <div class="qty-controls">
                 ${qty > 0 ? `<button class="qty-btn minus" onclick="updateCartQty('${prod.id}', -1)">-</button><span style="font-size: 0.9rem; font-weight: bold; min-width: 16px; text-align: center;">${qty}</span>` : ''}
@@ -460,7 +438,7 @@ function renderCheckoutContent() {
             <h2 style="color: #0b3c65; margin-bottom: 10px;">🛒 Order Details & Payment</h2>
             
             <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                <p style="font-weight: bold; margin-bottom: 6px; color: #1e293b;">Dukan: ${shopName}</p>
+                <p style="font-weight: bold; margin-bottom: 6px; color: #1e293b;">Store: Sea Mart</p>
                 <div style="max-height: 150px; overflow-y: auto; margin-bottom: 8px;">
                     ${itemsArr.map(i => `<div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding: 4px 0; border-bottom: 1px dashed #e2e8f0;"><span>${i.name} (x${i.quantity})</span><strong>₹${i.price * i.quantity}</strong></div>`).join('')}
                 </div>
@@ -610,7 +588,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
     }
 }
 
@@ -663,7 +641,6 @@ function injectGalleryButtonIntoShopUI() {
     previewBox.parentNode.insertBefore(containerDiv, previewBox);
 }
 
-// Yeh function sirf Dukandaar ke profile drawer me UPI settings ko inject karega agar pehle se nahi hai
 function injectUpiSettingsIntoProfileDrawer() {
     let drawer = document.getElementById('profile-drawer');
     if(!drawer) return;
@@ -677,7 +654,6 @@ function injectUpiSettingsIntoProfileDrawer() {
 
     let upiBox = document.createElement('div');
     upiBox.id = 'profile-drawer-upi-box';
-    // Customer hone par yeh hidden rahega, dukandaar hone par dikhega
     upiBox.style.cssText = `margin-top: 20px; padding: 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; display: ${currentRole === 'shopkeeper' ? 'block' : 'none'};`;
     
     upiBox.innerHTML = `
@@ -1131,7 +1107,7 @@ function openTrackOrderModal() {
         itemDiv.style.border = '1px solid #cbd5e1';
         itemDiv.innerHTML = `
             <p style="font-size: 0.85rem; font-weight: bold;">Order ID: ${ord.id} (${ord.paymentMethod === 'online' ? 'Online Paid 📱' : 'COD 💵'})</p>
-            <p style="font-size: 0.8rem; color: #555;">Dukan: ${ord.shopName}</p>
+            <p style="font-size: 0.8rem; color: #555;">Store: Sea Mart</p>
             <p style="font-size: 0.8rem; color: #555;">Items: ${ord.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}</p>
             ${!ord.isDelivered && !ord.isCancelled ? `
             <div style="background: #fffbeb; border: 1px dashed #b45309; padding: 6px; border-radius: 4px; margin-top: 6px; text-align: center;">
