@@ -16,13 +16,22 @@ if(!localStorage.getItem('sm_liveProducts')) {
     localStorage.setItem('sm_liveProducts', JSON.stringify(initialProducts));
 }
 
-let cart = {};
+// Cart ko localStorage se load karne ka logic taaki refresh par data na ude
+let cart = JSON.parse(localStorage.getItem('sea_mart_cart')) || {};
+
+function saveCartToLocalStorage() {
+    localStorage.setItem('sea_mart_cart', JSON.stringify(cart));
+}
+
 let alertInterval = null;
 let shopCameraStream = null;
 let capturedWebcamDataUrl = "";
 let selectedPaymentMethod = "cod"; // 'cod' ya 'online'
 
 window.addEventListener('DOMContentLoaded', () => {
+    // Page load hone par cart summary update karein taaki data bana rahe
+    updateCartSummary();
+
     let isLoggedIn = localStorage.getItem('sm_isLoggedIn');
     if(isLoggedIn === 'true') {
         document.getElementById('screen-welcome').classList.remove('active');
@@ -393,6 +402,10 @@ function updateCartQty(productId, change) {
             delete cart[productId];
         }
     }
+    
+    // Cart update hone ke baad localStorage me save karein
+    saveCartToLocalStorage();
+    
     updateCartSummary();
     loadCustomerProducts();
 }
@@ -558,6 +571,7 @@ function placeOrderFromCheckout() {
     alert("🛒 Order successfully place ho gaya!");
 
     cart = {};
+    saveCartToLocalStorage(); // Order place hone par cart clear karke storage update karein
     updateCartSummary();
 
     startShopkeeperAlarm();
@@ -1197,5 +1211,6 @@ function logout() {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-welcome').classList.add('active');
     cart = {};
+    saveCartToLocalStorage(); // Logout par bhi cart storage clear karein
     updateCartSummary();
 }
