@@ -30,8 +30,6 @@ window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('screen-customer-home').classList.add('active');
             loadStoreFilterBar();
             loadCustomerProducts();
-            if(document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = loggedInUserName;
-            if(document.getElementById('order-customer-phone')) document.getElementById('order-customer-phone').value = loggedInUserPhone;
         } else {
             document.getElementById('shop-name-display').innerText = postalName;
             document.getElementById('screen-shop-dashboard').classList.add('active');
@@ -242,8 +240,6 @@ function verifyAndCompleteRegistration() {
             document.getElementById('screen-customer-home').classList.add('active');
             loadStoreFilterBar();
             loadCustomerProducts();
-            if(document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = loggedInUserName;
-            if(document.getElementById('order-customer-phone')) document.getElementById('order-customer-phone').value = loggedInUserPhone;
         } else {
             document.getElementById('shop-name-display').innerText = postalName;
             document.getElementById('screen-shop-dashboard').classList.add('active');
@@ -290,8 +286,6 @@ function executeLogin() {
             document.getElementById('screen-customer-home').classList.add('active');
             loadStoreFilterBar();
             loadCustomerProducts();
-            if(document.getElementById('order-customer-name')) document.getElementById('order-customer-name').value = loggedInUserName;
-            if(document.getElementById('order-customer-phone')) document.getElementById('order-customer-phone').value = loggedInUserPhone;
         } else {
             document.getElementById('shop-name-display').innerText = postalName;
             document.getElementById('screen-shop-dashboard').classList.add('active');
@@ -414,6 +408,7 @@ function updateCartSummary() {
     if(totalEl) totalEl.innerText = totalAmount;
 }
 
+// Jab customer "Order Place Karein" button dabaye tab checkout screen khulegi
 function openCheckoutScreen() {
     let itemsArr = Object.values(cart);
     if(itemsArr.length === 0) {
@@ -446,9 +441,9 @@ function renderCheckoutContent() {
     let upiId = shopOwner && shopOwner.upiId ? shopOwner.upiId : "merchant@upi";
 
     checkoutScreen.innerHTML = `
-        <div style="padding: 16px; max-width: 500px; margin: auto; font-family: sans-serif;">
+        <div style="padding: 16px; max-width: 500px; margin: auto; font-family: sans-serif; background: #fff; min-height: 100vh;">
             <button onclick="backToCustomerHomeFromCheckout()" style="background: #64748b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 12px;">← Back to Home</button>
-            <h2 style="color: #0b3c65; margin-bottom: 10px;">🛒 Your Order Summary</h2>
+            <h2 style="color: #0b3c65; margin-bottom: 10px;">🛒 Order Details & Payment</h2>
             
             <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
                 <p style="font-weight: bold; margin-bottom: 6px; color: #1e293b;">Dukan: ${shopName}</p>
@@ -467,23 +462,23 @@ function renderCheckoutContent() {
             </div>
 
             <div style="margin-bottom: 15px;">
-                <label style="font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 4px;">Mobile Number:</label>
+                <label style="font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 4px;">Mobile Number (Anivarya - 10 Digit):</label>
                 <input type="text" id="checkout-cust-phone" value="${loggedInUserPhone}" maxlength="10" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
             </div>
 
             <div style="margin-bottom: 15px;">
-                <label style="font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 4px;">Delivery Address:</label>
+                <label style="font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 4px;">Sahi Local Address (Anivarya):</label>
                 <textarea id="checkout-cust-address" placeholder="Apna pura pata yahan likhein..." style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; height: 60px;"></textarea>
             </div>
 
             <div style="margin-bottom: 15px;">
                 <label style="font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 6px;">Payment Method Select Karein:</label>
                 <div style="display: flex; gap: 10px;">
-                    <label style="flex: 1; padding: 10px; border: 2px solid ${selectedPaymentMethod === 'cod' ? '#2563eb' : '#cbd5e1'}; border-radius: 6px; text-align: center; cursor: pointer; background: ${selectedPaymentMethod === 'cod' ? '#eff6ff' : '#fff'};">
+                    <label style="flex: 1; padding: 10px; border: 2px solid ${selectedPaymentMethod === 'cod' ? '#2563eb' : '#cbd5e1'}; border-radius: 6px; text-align: center; cursor: pointer; background: ${selectedPaymentMethod === 'cod' ? '#eff6ff' : '#fff'}; font-size: 0.85rem; font-weight: bold;">
                         <input type="radio" name="payMethod" value="cod" ${selectedPaymentMethod === 'cod' ? 'checked' : ''} onchange="setPaymentMethod('cod', ${totalAmount}, '${upiId}')" style="display:none;">
                         💵 Cash on Delivery
                     </label>
-                    <label style="flex: 1; padding: 10px; border: 2px solid ${selectedPaymentMethod === 'online' ? '#2563eb' : '#cbd5e1'}; border-radius: 6px; text-align: center; cursor: pointer; background: ${selectedPaymentMethod === 'online' ? '#eff6ff' : '#fff'};">
+                    <label style="flex: 1; padding: 10px; border: 2px solid ${selectedPaymentMethod === 'online' ? '#2563eb' : '#cbd5e1'}; border-radius: 6px; text-align: center; cursor: pointer; background: ${selectedPaymentMethod === 'online' ? '#eff6ff' : '#fff'}; font-size: 0.85rem; font-weight: bold;">
                         <input type="radio" name="payMethod" value="online" ${selectedPaymentMethod === 'online' ? 'checked' : ''} onchange="setPaymentMethod('online', ${totalAmount}, '${upiId}')" style="display:none;">
                         📱 Online Payment (QR)
                     </label>
@@ -498,7 +493,7 @@ function renderCheckoutContent() {
                 <p style="font-size: 0.75rem; color: #64748b; margin-top: 6px;">UPI ID: ${upiId}</p>
             </div>
 
-            <button onclick="placeOrderFromCheckout()" style="width: 100%; background: #166534; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer;">🛍️ Confirm & Place Order</button>
+            <button onclick="placeOrderFromCheckout()" style="width: 100%; background: #0b3c65; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer;">🛍️ Confirm & Place Order</button>
         </div>
     `;
 }
@@ -600,7 +595,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
     }
 }
 
@@ -653,7 +648,6 @@ function injectGalleryButtonIntoShopUI() {
     previewBox.parentNode.insertBefore(containerDiv, previewBox);
 }
 
-// Profile Drawer ke andar UPI ID dikhane aur save karne ke liye button bar wala feature
 function injectUpiSettingsIntoProfileDrawer() {
     let drawer = document.getElementById('profile-drawer');
     if(!drawer) return;
