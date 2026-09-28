@@ -32,7 +32,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     let isLoggedIn = localStorage.getItem('sm_isLoggedIn');
     
-    // Sabhi screens ko pehle hide karte hain
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
 
     if(isLoggedIn === 'true') {
@@ -175,7 +174,7 @@ function showLoginScreen() {
     document.getElementById('screen-mode-choice').classList.remove('active');
     document.getElementById('screen-registration').classList.remove('active');
     document.getElementById('screen-login').classList.add('active');
-    document.getElementById('login-heading').innerText = (currentRole === 'customer') ? "Customer Login" : "Dukandaار Login";
+    document.getElementById('login-heading').innerText = (currentRole === 'customer') ? "Customer Login" : "Dukandaar Login";
 }
 
 function showRegistrationScreen() {
@@ -234,6 +233,27 @@ function generateAndShowOTP() {
     alert("📲 Live OTP generate ho gaya hai!");
 }
 
+// 📧 Naya Function: New registration info admin ki Gmail id par bhejne ke liye
+function sendRegistrationAlertToAdmin(userData) {
+    let adminEmail = "rp619653@gmail.com";
+    let subject = encodeURIComponent("🚨 Naya User Registration Hua Hai - Sea Mart");
+    let body = encodeURIComponent(
+        `Naye user ki details niche di gayi hain:\n\n` +
+        `Naam: ${userData.name}\n` +
+        `Phone: ${userData.phone}\n` +
+        `Email: ${userData.email}\n` +
+        `Role: ${userData.role}\n` +
+        `Dukan Naam: ${userData.shopName || 'N/A'}\n` +
+        `Registration Date: ${new Date().toLocaleString()}`
+    );
+
+    let iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
+    document.body.appendChild(iframe);
+    setTimeout(() => iframe.remove(), 2000);
+}
+
 function verifyAndCompleteRegistration() {
     let pass = document.getElementById('new-password').value.trim();
     if(!pass) {
@@ -256,6 +276,10 @@ function verifyAndCompleteRegistration() {
 
         registeredUsers.push(newUser);
         localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
+        
+        // 👉 Yahan naya feature call kiya gaya hai jo admin Gmail par data bhejega
+        sendRegistrationAlertToAdmin(newUser);
+
         localStorage.setItem('sm_isLoggedIn', 'true');
         localStorage.setItem('sm_currentRole', currentRole);
         localStorage.setItem('sm_postalName', postalName);
@@ -617,7 +641,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
     }
 }
 
