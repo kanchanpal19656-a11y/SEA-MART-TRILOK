@@ -600,7 +600,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
     }
 }
 
@@ -653,7 +653,7 @@ function injectGalleryButtonIntoShopUI() {
     previewBox.parentNode.insertBefore(containerDiv, previewBox);
 }
 
-// Dukandaar ki UPI Settings ko Profile Drawer ke andar add karne ka function
+// Profile Drawer ke andar UPI ID dikhane aur save karne ke liye button bar wala feature
 function injectUpiSettingsIntoProfileDrawer() {
     let drawer = document.getElementById('profile-drawer');
     if(!drawer) return;
@@ -665,18 +665,17 @@ function injectUpiSettingsIntoProfileDrawer() {
 
     let upiBox = document.createElement('div');
     upiBox.id = 'profile-drawer-upi-box';
-    upiBox.style.cssText = "margin-top: 20px; padding: 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;";
+    upiBox.style.cssText = "margin-top: 20px; padding: 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box;";
     
     upiBox.innerHTML = `
         <h4 style="font-size: 0.9rem; color: #0b3c65; margin-bottom: 6px;">💳 Dukandaar UPI Settings</h4>
-        <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 8px;">Online QR code generation ke liye apni UPI ID yahan daalein:</p>
-        <div style="display: flex; gap: 6px;">
-            <input type="text" id="drawer-shop-upi-input" placeholder="e.g. merchant@paytm" style="flex:1; padding: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 4px;">
-            <button onclick="saveShopUpiIdFromDrawer()" style="background: #2563eb; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; cursor: pointer;">Save</button>
+        <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 8px;">Yahan apni current UPI ID dekhein aur update karein:</p>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <input type="text" id="drawer-shop-upi-input" placeholder="e.g. merchant@paytm" style="width: 100%; padding: 8px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+            <button onclick="saveShopUpiIdFromDrawer()" style="width: 100%; background: #166534; color: white; border: none; padding: 8px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; cursor: pointer; text-align: center;">💾 Save UPI ID</button>
         </div>
     `;
 
-    // Drawer ke andar content area mein append kar dena
     drawer.appendChild(upiBox);
     loadShopUpiSettings();
 }
@@ -687,6 +686,8 @@ function loadShopUpiSettings() {
     let shopOwner = registeredUsers.find(u => u.shopName === postalName && u.role === 'shopkeeper');
     if(shopOwner && shopOwner.upiId) {
         input.value = shopOwner.upiId;
+    } else {
+        input.value = "";
     }
 }
 
@@ -704,6 +705,8 @@ function saveShopUpiIdFromDrawer() {
         shopOwner.upiId = upiVal;
         localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
         alert("✅ UPI ID profile ke andar successfully save ho gayi hai!");
+    } else {
+        alert("⚠️ Shop owner data nahi mila!");
     }
 }
 
