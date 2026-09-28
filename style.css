@@ -34,8 +34,38 @@ body {
     border-radius: 12px;
 }
 
-.screen { display: none; padding: 20px; flex: 1; overflow-y: auto; flex-direction: column; background: #ffffff; position: relative; padding-bottom: 70px; }
-.screen.active { display: flex; }
+.screen { 
+    display: none; 
+    padding: 20px; 
+    flex: 1; 
+    overflow-y: auto; 
+    flex-direction: column; 
+    background: #ffffff; 
+    position: relative; 
+    padding-bottom: 70px; 
+    width: 100%;
+    box-sizing: border-box;
+}
+.screen.active { display: flex !important; }
+
+/* Fixed Dynamic Checkout Screen Styling */
+#screen-checkout {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    z-index: 1000;
+    padding: 16px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    display: none;
+    flex-direction: column;
+}
+#screen-checkout.active {
+    display: flex !important;
+}
 
 .top-header-bar {
     display: flex;
