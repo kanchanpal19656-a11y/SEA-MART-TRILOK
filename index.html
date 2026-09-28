@@ -59,7 +59,7 @@
                 <p>Saman kharidne ke liye</p>
             </div>
             <div class="role-selection-card" onclick="openModeSelection('shopkeeper')">
-                <h3>🏪 Main Dukandaar Hoon</h3>
+                <h3>🏪 Main Dukandaار Hoon</h3>
                 <p>Saman bechne ke liye</p>
             </div>
         </div>
@@ -150,7 +150,7 @@
         </div>
 
         <div class="switch-auth-text" style="text-align: center; margin-top: 12px; font-size: 0.9rem;">
-            Pehle se account hai? <span onclick="showLoginScreen()" style="color:var(--primary); font-weight:bold; cursor:pointer;">Login Karein</span>
+            Pehle से account hai? <span onclick="showLoginScreen()" style="color:var(--primary); font-weight:bold; cursor:pointer;">Login Karein</span>
         </div>
         <button class="secondary-btn" onclick="backToModeChoice()" style="margin-top: 15px;">Peeche Jayein</button>
     </div>
@@ -169,23 +169,15 @@
         <!-- Customer Product Grid -->
         <div id="customer-product-grid" class="customer-product-grid"></div>
 
-        <!-- Checkout Section -->
-        <div class="checkout-box">
-            <h3 style="color: #b45309; font-size: 0.95rem; margin-bottom: 6px;">📋 Order Detail & Address</h3>
-            <div class="form-group" style="margin-bottom: 6px;">
-                <label style="font-size: 0.8rem;">Aapka Poora Naam</label>
-                <input type="text" id="order-customer-name" placeholder="Naam likhein" style="padding: 7px; font-size: 0.85rem;">
+        <!-- Clean Checkout Button Section (Static Form Removed) -->
+        <div class="checkout-box" style="padding: 12px; background: #fff; border-top: 1px solid #cbd5e1; margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 0.85rem; font-weight: bold; color: #1e293b;">Total Items: <span id="cart-count">0</span></span>
+                <span style="font-size: 0.95rem; font-weight: bold; color: #166534;">Total: ₹<span id="cart-total">0</span></span>
             </div>
-            <div class="form-group" style="margin-bottom: 6px;">
-                <label style="font-size: 0.8rem;">Mobile Number (Anivarya - 10 Digit)</label>
-                <input type="tel" id="order-customer-phone" maxlength="10" placeholder="10 digit mobile number dalein" style="padding: 7px; font-size: 0.85rem;">
-            </div>
-            <div class="form-group" style="margin-bottom: 6px;">
-                <label style="font-size: 0.8rem;">Sahi Local Address (Anivarya)</label>
-                <textarea id="order-customer-address" placeholder="Gali no, Landmark, Area ka poora address dalein..." style="padding: 7px; font-size: 0.85rem; height: 40px; resize: none;"></textarea>
-            </div>
-            <p style="font-size: 0.8rem;">Total Items: <span id="cart-count">0</span> | Total: ₹<span id="cart-total">0</span></p>
-            <button onclick="placeOrder()" style="padding: 9px; font-size: 0.9rem; margin-top: 6px;">Order Place Karein</button>
+            <button onclick="openCheckoutScreen()" style="width: 100%; background: #0b3c65; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer;">
+                🛍️ Order Place Karein
+            </button>
         </div>
 
         <!-- CUSTOMER BUTTON BAR: Tracking Order -->
