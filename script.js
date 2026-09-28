@@ -1,24 +1,20 @@
 let currentRole = localStorage.getItem('sm_currentRole') || 'customer';
-let postalName = localStorage.getItem('sm_postalName') || "Gupta Kirana Store";
-let loggedInUserName = localStorage.getItem('sm_userName') || "Rajan Pal";
-let loggedInUserPhone = localStorage.getItem('sm_userPhone') || "9876543210";
-let loggedInUserEmail = localStorage.getItem('sm_userEmail') || "rajan@example.com";
+let postalName = localStorage.getItem('sm_postalName') || "";
+let loggedInUserName = localStorage.getItem('sm_userName') || "";
+let loggedInUserPhone = localStorage.getItem('sm_userPhone') || "";
+let loggedInUserEmail = localStorage.getItem('sm_userEmail') || "";
 let selectedStoreFilter = "All";
 
 let currentLat = 28.4744;
 let currentLng = 77.5040;
 
-let defaultUsers = [
-    { phone: "9876543210", email: "rajan@example.com", password: "123", name: "Rajan Pal", role: "customer", lat: 28.4744, lng: 77.5040 },
-    { phone: "9123456789", email: "gupta@example.com", password: "123", name: "Ramesh Gupta", role: "shopkeeper", shopName: "Gupta Kirana Store", lat: 28.4750, lng: 77.5050 }
-];
+// Saare purane dummy users hata diye gaye hain, ab array khali hai
+let defaultUsers = [];
 let registeredUsers = JSON.parse(localStorage.getItem('sm_registeredUsers')) || defaultUsers;
 
 if(!localStorage.getItem('sm_liveProducts')) {
-    let initialProducts = [
-        { id: 1, name: "Aashirvaad Atta (5kg)", price: 240, shop: "Gupta Kirana Store", shopLat: 28.4750, shopLng: 77.5050, image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=200&q=80" },
-        { id: 2, name: "Fortune Sunflower Oil (1L)", price: 130, shop: "Sharma General Store", shopLat: 28.4800, shopLng: 77.5100, image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=200&q=80" }
-    ];
+    // Shuruat mein koi live product nahi rahega jab tak naya dukandaar add na kare
+    let initialProducts = [];
     localStorage.setItem('sm_liveProducts', JSON.stringify(initialProducts));
 }
 
@@ -135,7 +131,7 @@ function openModeSelection(role) {
     localStorage.setItem('sm_currentRole', role);
     document.getElementById('screen-role-selection').classList.remove('active');
     document.getElementById('screen-mode-choice').classList.add('active');
-    document.getElementById('mode-title').innerText = (role === 'customer') ? "Customer Options" : "Dukandaار Options";
+    document.getElementById('mode-title').innerText = (role === 'customer') ? "Customer Options" : "Dukandaar Options";
 }
 
 function backToRoleSelection() {
@@ -491,7 +487,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
     }
 }
 
@@ -615,7 +611,7 @@ function updateShopLiveItemsUI() {
 }
 
 function deleteShopProduct(productId) {
-    if(!confirm("Kya aap sach mein is live item को delete karna chahte hain?")) {
+    if(!confirm("Kya aap sach mein is live item ko delete karna chahte hain?")) {
         return;
     }
 
@@ -732,9 +728,6 @@ function verifyDeliveryOtp(orderId) {
     }
 }
 
-// ==========================================
-// NEW: Customer Cancel Order Request Logic
-// ==========================================
 function requestCustomerOrderCancellation(orderId) {
     let allOrders = JSON.parse(localStorage.getItem('sm_allOrders')) || [];
     let ord = allOrders.find(o => o.id === orderId);
@@ -755,9 +748,6 @@ function requestCustomerOrderCancellation(orderId) {
     openTrackOrderModal();
 }
 
-// ==========================================
-// NEW: Shopkeeper Verify Cancel OTP Logic
-// ==========================================
 function verifyCancelOtp(orderId) {
     let inputField = document.getElementById(`shop-cancel-otp-input-${orderId}`);
     let enteredOtp = inputField ? inputField.value.trim() : '';
@@ -811,9 +801,6 @@ function updateShopSoldItemsUI() {
     });
 }
 
-// ==========================================
-// FIXED: Universal Cross-Platform PDF Download
-// ==========================================
 function downloadShopReportPDF() {
     let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
     let mySoldItems = soldItemsHistory.filter(s => s.shopName === postalName);
