@@ -59,7 +59,7 @@
                 <p>Saman kharidne ke liye</p>
             </div>
             <div class="role-selection-card" onclick="openModeSelection('shopkeeper')">
-                <h3>🏪 Main Dukandaار Hoon</h3>
+                <h3>🏪 Main Dukandaar Hoon</h3>
                 <p>Saman bechne ke liye</p>
             </div>
         </div>
@@ -150,7 +150,7 @@
         </div>
 
         <div class="switch-auth-text" style="text-align: center; margin-top: 12px; font-size: 0.9rem;">
-            Pehle से account hai? <span onclick="showLoginScreen()" style="color:var(--primary); font-weight:bold; cursor:pointer;">Login Karein</span>
+            Pehle se account hai? <span onclick="showLoginScreen()" style="color:var(--primary); font-weight:bold; cursor:pointer;">Login Karein</span>
         </div>
         <button class="secondary-btn" onclick="backToModeChoice()" style="margin-top: 15px;">Peeche Jayein</button>
     </div>
@@ -169,20 +169,27 @@
         <!-- Customer Product Grid -->
         <div id="customer-product-grid" class="customer-product-grid"></div>
 
-        <!-- Clean Checkout Button Section (Static Form Removed) -->
-        <div class="checkout-box" style="padding: 12px; background: #fff; border-top: 1px solid #cbd5e1; margin-top: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 0.85rem; font-weight: bold; color: #1e293b;">Total Items: <span id="cart-count">0</span></span>
-                <span style="font-size: 0.95rem; font-weight: bold; color: #166534;">Total: ₹<span id="cart-total">0</span></span>
+        <!-- Floating Cart / Order Place Bar (Niche Toolbar ke theek upar) -->
+        <div class="floating-cart-footer">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; font-weight: bold; color: #1e293b;">
+                <span>Total Items: <span id="cart-count">0</span></span>
+                <span>Total: ₹<span id="cart-total">0</span></span>
             </div>
-            <button onclick="openCheckoutScreen()" style="width: 100%; background: #0b3c65; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer;">
+            <button onclick="openCheckoutScreen()" style="width: 100%; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 6px; font-size: 0.95rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
                 🛍️ Order Place Karein
             </button>
         </div>
 
-        <!-- CUSTOMER BUTTON BAR: Tracking Order -->
-        <div class="track-order-widget" onclick="openTrackOrderModal()">
-            <i class="fas fa-truck-fast"></i> Tracking Order
+        <!-- App Bottom Toolbar (Bilkul Real App Jaisa Niche Bar) -->
+        <div class="app-bottom-toolbar">
+            <button class="toolbar-btn active" onclick="backToCustomerHome()">
+                <span class="icon">🏠</span>
+                Home
+            </button>
+            <button class="toolbar-btn" onclick="openTrackOrderModal()">
+                <span class="icon">📦</span>
+                Track Order
+            </button>
         </div>
     </div>
 
