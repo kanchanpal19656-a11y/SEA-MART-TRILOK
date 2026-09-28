@@ -973,7 +973,6 @@ function updateShopSoldItemsUI() {
     });
 }
 
-// 🖨️ FULL DETAILS SOLD REPORT PDF / PRINT FIX
 function downloadSoldItemsPDF() {
     let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
     let mySoldItems = soldItemsHistory.filter(s => s.shopName === postalName);
@@ -1056,7 +1055,6 @@ function downloadSoldItemsPDF() {
         </html>
     `;
 
-    // Universal Iframe Print Method (Works across Mobile and Desktop Browsers smoothly)
     let oldFrame = document.getElementById('print-iframe');
     if (oldFrame) oldFrame.remove();
 
@@ -1080,7 +1078,6 @@ function downloadSoldItemsPDF() {
             iframe.contentWindow.focus();
             iframe.contentWindow.print();
         } catch (err) {
-            // Fallback to Blob Window
             let blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
             let blobUrl = URL.createObjectURL(blob);
             let win = window.open(blobUrl, '_blank');
