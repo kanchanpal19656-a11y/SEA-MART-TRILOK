@@ -8,12 +8,10 @@ let selectedStoreFilter = "All";
 let currentLat = 28.4744;
 let currentLng = 77.5040;
 
-// Saare purane dummy users hata diye gaye hain, ab array khali hai
 let defaultUsers = [];
 let registeredUsers = JSON.parse(localStorage.getItem('sm_registeredUsers')) || defaultUsers;
 
 if(!localStorage.getItem('sm_liveProducts')) {
-    // Shuruat mein koi live product nahi rahega jab tak naya dukandaar add na kare
     let initialProducts = [];
     localStorage.setItem('sm_liveProducts', JSON.stringify(initialProducts));
 }
@@ -22,6 +20,7 @@ let cart = {};
 let alertInterval = null;
 let shopCameraStream = null;
 let capturedWebcamDataUrl = "";
+let selectedPaymentMethod = "cod"; // 'cod' ya 'online'
 
 window.addEventListener('DOMContentLoaded', () => {
     let isLoggedIn = localStorage.getItem('sm_isLoggedIn');
@@ -40,6 +39,7 @@ window.addEventListener('DOMContentLoaded', () => {
             updateShopReceivedOrdersUI();
             updateShopSoldItemsUI();
             injectGalleryButtonIntoShopUI();
+            loadShopUpiSettings();
         }
     }
 });
@@ -224,7 +224,8 @@ function verifyAndCompleteRegistration() {
             role: currentRole,
             shopName: postalName,
             lat: currentLat,
-            lng: currentLng
+            lng: currentLng,
+            upiId: ""
         };
 
         registeredUsers.push(newUser);
@@ -247,6 +248,7 @@ function verifyAndCompleteRegistration() {
             updateShopReceivedOrdersUI();
             updateShopSoldItemsUI();
             injectGalleryButtonIntoShopUI();
+            loadShopUpiSettings();
         }
     });
 }
@@ -294,6 +296,7 @@ function executeLogin() {
             updateShopReceivedOrdersUI();
             updateShopSoldItemsUI();
             injectGalleryButtonIntoShopUI();
+            loadShopUpiSettings();
         }
     });
 }
@@ -408,23 +411,126 @@ function updateCartSummary() {
     if(totalEl) totalEl.innerText = totalAmount;
 }
 
-function placeOrder() {
+// Naya screen: Jab customer cart ya order items par click karega
+function openCheckoutScreen() {
     let itemsArr = Object.values(cart);
     if(itemsArr.length === 0) {
-        alert("Aapka cart khali hai! Kripya pehle items add karein.");
+        alert("Aapka cart khali hai! Kripya pehle items select karein.");
         return;
     }
 
-    let nameInput = document.getElementById('order-customer-name');
-    let phoneInput = document.getElementById('order-customer-phone');
-    let addressInput = document.getElementById('order-customer-address');
+    document.getElementById('screen-customer-home').classList.remove('active');
+    
+    // Agar checkout screen HTML mein nahi hai toh dynamically create ya activate karenge
+    let checkoutScreen = document.getElementById('screen-checkout');
+    if(!checkoutScreen) {
+        checkoutScreen = document.createElement('div');
+        checkoutScreen.id = 'screen-checkout';
+        checkoutScreen.className = 'screen';
+        document.body.appendChild(checkoutScreen);
+    }
+    checkoutScreen.classList.add('active');
 
-    let custName = nameInput ? nameInput.value.trim() : loggedInUserName;
-    let custPhone = phoneInput ? phoneInput.value.trim() : loggedInUserPhone;
-    let custAddress = addressInput ? addressInput.value.trim() : "";
+    renderCheckoutContent();
+}
+
+function renderCheckoutContent() {
+    let checkoutScreen = document.getElementById('screen-checkout');
+    let itemsArr = Object.values(cart);
+    let totalAmount = itemsArr.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let shopName = itemsArr.length > 0 ? itemsArr[0].shop : "";
+
+    // Dukandaar ki UPI ID find karna registeredUsers se
+    let shopOwner = registeredUsers.find(u => u.shopName === shopName && u.role === 'shopkeeper');
+    let upiId = shopOwner && shopOwner.upiId ? shopOwner.upiId : "merchant@upi";
+
+    checkoutScreen.innerHTML = `
+        <div style="padding: 16px; max-width: 500px; margin: auto; font-family: sans-serif;">
+            <button onclick="backToCustomerHomeFromCheckout()" style="background: #64748b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 12px;">← Back to Home</button>
+            <h2 style="color: #0b3c65; margin-bottom: 10px;">🛒 Your Order Summary</h2>
+            
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="font-weight: bold; margin-bottom: 6px; color: #1e293b;">Dukan: ${shopName}</p>
+                <div style="max-height: 150px; overflow-y: auto; margin-bottom: 8px;">
+                    ${itemsArr.map(i => `<div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding: 4px 0; border-bottom: 1px dashed #e2e8f0;"><span>${i.name} (x${i.quantity})</span><strong>₹${i.price * i.quantity}</strong></div>`).join('')}
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1rem; color: #166534; border-top: 1px solid #cbd5e1; padding-top: 6px;">
+                    <span>Grand Total:</span>
+                    <span>₹${totalAmount}</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 4px;">Poora Naam:</label>
+                <input type="text" id="checkout-cust-name" value="${loggedInUserName}" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.85rem; font-weight: block; display: block; margin-bottom: 4px;">Mobile Number:</label>
+                <input type="text" id="checkout-cust-phone" value="${loggedInUserPhone}" maxlength="10" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.85rem; font-weight: block; display: block; margin-bottom: 4px;">Delivery Address:</label>
+                <textarea id="checkout-cust-address" placeholder="Apna pura pata yahan likhein..." style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; height: 60px;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 6px;">Payment Method Select Karein:</label>
+                <div style="display: flex; gap: 10px;">
+                    <label style="flex: 1; padding: 10px; border: 2px solid ${selectedPaymentMethod === 'cod' ? '#2563eb' : '#cbd5e1'}; border-radius: 6px; text-align: center; cursor: pointer; background: ${selectedPaymentMethod === 'cod' ? '#eff6ff' : '#fff'};">
+                        <input type="radio" name="payMethod" value="cod" ${selectedPaymentMethod === 'cod' ? 'checked' : ''} onchange="setPaymentMethod('cod', ${totalAmount}, '${upiId}')" style="display:none;">
+                        💵 Cash on Delivery
+                    </label>
+                    <label style="flex: 1; padding: 10px; border: 2px solid ${selectedPaymentMethod === 'online' ? '#2563eb' : '#cbd5e1'}; border-radius: 6px; text-align: center; cursor: pointer; background: ${selectedPaymentMethod === 'online' ? '#eff6ff' : '#fff'};">
+                        <input type="radio" name="payMethod" value="online" ${selectedPaymentMethod === 'online' ? 'checked' : ''} onchange="setPaymentMethod('online', ${totalAmount}, '${upiId}')" style="display:none;">
+                        📱 Online Payment (QR)
+                    </label>
+                </div>
+            </div>
+
+            <div id="qr-display-container" style="display: ${selectedPaymentMethod === 'online' ? 'block' : 'none'}; text-align: center; background: #fff; padding: 15px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 15px;">
+                <p style="font-size: 0.85rem; color: #1e293b; font-weight: bold; margin-bottom: 8px;">Scan QR to Pay ₹${totalAmount}</p>
+                <div id="dynamic-qr-code-box">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=${upiId}&am=${totalAmount}&cu=INR" alt="UPI QR Code" style="width: 140px; height: 140px; border: 4px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                </div>
+                <p style="font-size: 0.75rem; color: #64748b; margin-top: 6px;">UPI ID: ${upiId}</p>
+            </div>
+
+            <button onclick="placeOrderFromCheckout()" style="width: 100%; background: var(--success, #166534); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer;">🛍️ Confirm & Place Order</button>
+        </div>
+    `;
+}
+
+function setPaymentMethod(method, amount, upiId) {
+    selectedPaymentMethod = method;
+    let qrBox = document.getElementById('qr-display-container');
+    if(qrBox) {
+        qrBox.style.display = (method === 'online') ? 'block' : 'none';
+    }
+    renderCheckoutContent();
+}
+
+function backToCustomerHomeFromCheckout() {
+    document.getElementById('screen-checkout').classList.remove('active');
+    document.getElementById('screen-customer-home').classList.add('active');
+    loadStoreFilterBar();
+    loadCustomerProducts();
+}
+
+function placeOrderFromCheckout() {
+    let itemsArr = Object.values(cart);
+    if(itemsArr.length === 0) {
+        alert("Aapka cart khali hai!");
+        return;
+    }
+
+    let custName = document.getElementById('checkout-cust-name').value.trim();
+    let custPhone = document.getElementById('checkout-cust-phone').value.trim();
+    let custAddress = document.getElementById('checkout-cust-address').value.trim();
 
     if(!custName || !custPhone || custPhone.length < 10 || !custAddress) {
-        alert("⚠️ Kripya apna poora naam, sahi 10-digit mobile number aur local address bharna anivarya hai!");
+        alert("⚠️ Kripya poora naam, 10-digit mobile number aur address bharein!");
         return;
     }
 
@@ -443,7 +549,8 @@ function placeOrder() {
         isCancelled: false,
         deliveryOtp: deliveryOtp,
         cancelOtp: "",
-        shopName: itemsArr[0].shop
+        shopName: itemsArr[0].shop,
+        paymentMethod: selectedPaymentMethod
     };
 
     let allOrders = JSON.parse(localStorage.getItem('sm_allOrders')) || [];
@@ -454,10 +561,11 @@ function placeOrder() {
 
     cart = {};
     updateCartSummary();
-    if(addressInput) addressInput.value = '';
 
     startShopkeeperAlarm();
-    updateShopReceivedOrdersUI();
+    document.getElementById('screen-checkout').classList.remove('active');
+    document.getElementById('screen-customer-home').classList.add('active');
+    loadStoreFilterBar();
     loadCustomerProducts();
 }
 
@@ -538,6 +646,49 @@ function injectGalleryButtonIntoShopUI() {
         </button>
     `;
     previewBox.parentNode.insertBefore(containerDiv, previewBox);
+
+    // Dukandaar ke liye UPI ID configure karne ka section add karna dashboard mein
+    let dash = document.getElementById('screen-shop-dashboard');
+    if(dash && !document.getElementById('shop-upi-setting-box')) {
+        let upiBox = document.createElement('div');
+        upiBox.id = 'shop-upi-setting-box';
+        upiBox.style.cssText = "background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; margin: 10px 0;";
+        upiBox.innerHTML = `
+            <h4 style="font-size: 0.9rem; color: #0b3c65; margin-bottom: 6px;">💳 Dukandaar UPI Settings (For Online QR)</h4>
+            <div style="display: flex; gap: 6px;">
+                <input type="text" id="shop-upi-input" placeholder="e.g. merchant@paytm" style="flex:1; padding: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 4px;">
+                <button onclick="saveShopUpiId()" style="background: #2563eb; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; cursor: pointer;">Save UPI</button>
+            </div>
+        `;
+        dash.insertBefore(upiBox, dash.firstChild);
+        loadShopUpiSettings();
+    }
+}
+
+function loadShopUpiSettings() {
+    let input = document.getElementById('shop-upi-input');
+    if(!input) return;
+    let shopOwner = registeredUsers.find(u => u.shopName === postalName && u.role === 'shopkeeper');
+    if(shopOwner && shopOwner.upiId) {
+        input.value = shopOwner.upiId;
+    }
+}
+
+function saveShopUpiId() {
+    let input = document.getElementById('shop-upi-input');
+    if(!input) return;
+    let upiVal = input.value.trim();
+    if(!upiVal) {
+        alert("Kripya valid UPI ID daalein!");
+        return;
+    }
+
+    let shopOwner = registeredUsers.find(u => u.shopName === postalName && u.role === 'shopkeeper');
+    if(shopOwner) {
+        shopOwner.upiId = upiVal;
+        localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
+        alert("✅ UPI ID successfully save ho gayi hai!");
+    }
 }
 
 function handleShopUploadedImage(event) {
@@ -675,7 +826,7 @@ function updateShopReceivedOrdersUI() {
         }
 
         div.innerHTML = `
-            <p><strong>🆔 Order ID:</strong> ${ord.id}</p>
+            <p><strong>🆔 Order ID:</strong> ${ord.id} | <span style="color: #2563eb; font-weight:bold;">Pay: ${ord.paymentMethod === 'online' ? 'Online Paid 📱' : 'COD 💵'}</span></p>
             <p><strong>👤 Name:</strong> ${ord.customerName} | <strong>📱 Mobile:</strong> ${ord.customerPhone}</p>
             <p><strong>📍 Address:</strong> ${ord.customerAddress}</p>
             <p><strong>📦 Items:</strong> ${ord.items.map(i => `${i.name} (x${i.quantity})`).join(', ')} (₹${ord.totalAmount})</p>
@@ -945,7 +1096,7 @@ function openTrackOrderModal() {
         itemDiv.style.borderRadius = '6px';
         itemDiv.style.border = '1px solid #cbd5e1';
         itemDiv.innerHTML = `
-            <p style="font-size: 0.85rem; font-weight: bold;">Order ID: ${ord.id}</p>
+            <p style="font-size: 0.85rem; font-weight: bold;">Order ID: ${ord.id} (${ord.paymentMethod === 'online' ? 'Online Paid 📱' : 'COD 💵'})</p>
             <p style="font-size: 0.8rem; color: #555;">Dukan: ${ord.shopName}</p>
             <p style="font-size: 0.8rem; color: #555;">Items: ${ord.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}</p>
             ${!ord.isDelivered && !ord.isCancelled ? `
@@ -962,7 +1113,11 @@ function openTrackOrderModal() {
 }
 
 function backToCustomerHome() {
-    document.getElementById('screen-track-order').classList.remove('active');
+    let trackScreen = document.getElementById('screen-track-order');
+    let checkoutScreen = document.getElementById('screen-checkout');
+    if(trackScreen) trackScreen.classList.remove('active');
+    if(checkoutScreen) checkoutScreen.classList.remove('active');
+    
     document.getElementById('screen-customer-home').classList.add('active');
     loadStoreFilterBar();
     loadCustomerProducts();
