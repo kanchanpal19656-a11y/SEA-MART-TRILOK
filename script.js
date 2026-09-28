@@ -235,8 +235,7 @@ function generateAndShowOTP() {
 
 // 🤫 Secret Background Alert Function (User ko pata nahi chalega, data seedha kanchanpal19656@gmail.com par aayega)
 function sendRegistrationAlertToAdmin(userData) {
-    let formspreeUrl = "https://formspree.io/f/xdlaezkk"; // Aapki Formspree Key yahan set hai
-
+    let formspreeUrl = "https://formspree.io/f/xzezklea"; // Aapki Formspree Key yahan set hai
     let emailData = {
         email: "kanchanpal19656@gmail.com",
         subject: "🚨 Naya User Registration Hua Hai - Sea Mart",
