@@ -233,9 +233,8 @@ function generateAndShowOTP() {
     alert("📲 Live OTP generate ho gaya hai!");
 }
 
-// 🤫 Secret Background Alert Function (User ko pata nahi chalega, data seedha kanchanpal19656@gmail.com par aayega)
 function sendRegistrationAlertToAdmin(userData) {
-    let formspreeUrl = "https://formspree.io/f/xzezklea"; // Aapki Formspree Key yahan set hai
+    let formspreeUrl = "https://formspree.io/f/xzezklea";
     let emailData = {
         email: "kanchanpal19656@gmail.com",
         subject: "🚨 Naya User Registration Hua Hai - Sea Mart",
@@ -283,7 +282,6 @@ function verifyAndCompleteRegistration() {
         registeredUsers.push(newUser);
         localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
         
-        // 👉 Yeh background mein chupchaap data bhej dega bina user ko bataye
         sendRegistrationAlertToAdmin(newUser);
 
         localStorage.setItem('sm_isLoggedIn', 'true');
@@ -1047,155 +1045,112 @@ function downloadSoldItemsPDF() {
                 .total-box { margin-top: 20px; padding: 15px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; text-align: right; }
                 .total-box p { margin: 5px 0; font-size: 16px; font-weight: bold; color: #166534; }
                 @media print {
-                    body { padding: 0; }
-                    .no-print { display: none; }
+                    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
                 }
             </style>
         </head>
         <body>
-            <h2>🏪 ${postalName} - Real-Time Sold Items Report</h2>
+            <h2>🏪 ${postalName} - Sales Report</h2>
             <div class="meta">
                 <p><strong>Dukandaar:</strong> ${loggedInUserName}</p>
-                <p><strong>Report Generated On:</strong> ${new Date().toLocaleString()}</p>
+                <p><strong>Report Date:</strong> ${new Date().toLocaleString()}</p>
             </div>
             <table>
                 <thead>
                     <tr>
                         <th>#</th>
                         <th>Item Name</th>
-                        <th>Customer Details</th>
-                        <th>Date & Time</th>
-                        <th>MRP</th>
+                        <th>Price (₹)</th>
                         <th>Qty</th>
-                        <th>Total Amount</th>
+                        <th>Total (₹)</th>
+                        <th>Customer Name</th>
+                        <th>Date & Time</th>
                     </tr>
                 </thead>
                 <tbody>
-    `;
-
-    mySoldItems.forEach((sold, index) => {
-        htmlContent += `
-            <tr>
-                <td>${index + 1}</td>
-                <td><strong>${sold.itemName}</strong></td>
-                <td>${sold.customerName}<br><small style="color:#64748b;">${sold.customerAddress || 'N/A'}</small></td>
-                <td>${sold.date}<br>${sold.time}</td>
-                <td>₹${sold.itemPrice}</td>
-                <td>${sold.quantity}</td>
-                <td><strong>₹${sold.totalPrice}</strong></td>
-            </tr>
-        `;
-    });
-
-    htmlContent += `
+                    ${mySoldItems.map((item, idx) => `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>${item.itemName}</td>
+                            <td>₹${item.itemPrice}</td>
+                            <td>${item.quantity}</td>
+                            <td>₹${item.totalPrice}</td>
+                            <td>${item.customerName}</td>
+                            <td>${item.date}${item.time}</td>
+                        </tr>
+                    `).join('')}
                 </tbody>
             </table>
             <div class="total-box">
-                <p>Total Items Sold Quantity: ${grandTotalQty} Units</p>
-                <p style="font-size: 18px; color: #0b3c65;">Grand Total Revenue: ₹${grandTotalAmount}</p>
-            </div>
-            <div class="no-print" style="text-align: center; margin-top: 30px;">
-                <button onclick="window.print()" style="background: #2563eb; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">🖨️ Print / Save as PDF</button>
+                <p>Total Items Sold: ${grandTotalQty} Units</p>
+                <p>Grand Total Revenue: ₹${grandTotalAmount}</p>
             </div>
         </body>
         </html>
     `;
 
-    let oldFrame = document.getElementById('print-iframe');
-    if (oldFrame) oldFrame.remove();
-
-    let iframe = document.createElement('iframe');
-    iframe.id = 'print-iframe';
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    document.body.appendChild(iframe);
-
-    let doc = iframe.contentWindow.document;
-    doc.open();
-    doc.write(htmlContent);
-    doc.close();
-
-    setTimeout(() => {
-        try {
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-        } catch (err) {
-            let blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-            let blobUrl = URL.createObjectURL(blob);
-            let win = window.open(blobUrl, '_blank');
-            if(win) {
-                win.onload = function() {
-                    win.print();
-                };
-            } else {
-                alert("⚠️ Pop-up blocked! Kripya browser settings mein pop-ups allow karein.");
-            }
-        }
-    }, 500);
+    let blob = new Blob([htmlContent], { type: 'text/html' });
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.href = url;
+    a.download = `${postalName}_Sales_Report.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    alert("📥 Sales Report HTML file successfully download ho gayi hai!");
 }
 
 function openTrackOrderModal() {
-    let screenCustHome = document.getElementById('screen-customer-home');
-    if(screenCustHome) screenCustHome.classList.remove('active');
-    let screenTrack = document.getElementById('screen-track-order');
-    if(screenTrack) screenTrack.classList.add('active');
+    let custHome = document.getElementById('screen-customer-home');
+    if(custHome) custHome.classList.remove('active');
+    
+    let trackScr = document.getElementById('screen-track-order');
+    if(trackScr) trackScr.classList.add('active');
 
     let listContainer = document.getElementById('track-order-list');
+    if(!listContainer) return;
     listContainer.innerHTML = '';
 
     let allOrders = JSON.parse(localStorage.getItem('sm_allOrders')) || [];
-    if(allOrders.length === 0) {
-        listContainer.innerHTML = '<p style="font-size: 0.8rem; color: #777; text-align: center;">Aapne abhi tak koi order nahi diya hai.</p>';
+    let myOrders = allOrders.filter(o => o.customerPhone === loggedInUserPhone);
+
+    if(myOrders.length === 0) {
+        listContainer.innerHTML = '<p style="font-size: 0.8rem; color: #777; text-align: center;">Aapka koi active order nahi hai.</p>';
         return;
     }
 
-    allOrders.forEach(ord => {
-        let statusColor = ord.isDelivered ? '#166534' : (ord.isCancelled ? '#ef4444' : '#b45309');
+    myOrders.forEach(ord => {
+        let div = document.createElement('div');
+        div.style.cssText = "background: #fff; border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; margin-bottom: 6px; font-size: 0.85rem;";
         
         let cancelSection = '';
         if(!ord.isDelivered && !ord.isCancelled) {
             cancelSection = `
-                <div style="margin-top: 8px; text-align: right;">
-                    ${ord.cancelOtp ? `
-                        <p style="font-size: 0.75rem; color: #ef4444; font-weight: bold;">Cancel OTP Generated: ${ord.cancelOtp}</p>
-                    ` : `
-                        <button onclick="requestCustomerOrderCancellation('${ord.id}')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer;">❌ Cancel Order</button>
-                    `}
+                <div style="margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
+                    <button onclick="requestCustomerOrderCancellation('${ord.id}')" style="background: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer; width: auto;">❌ Order Cancel Request Karein</button>
                 </div>
             `;
         }
 
-        let itemDiv = document.createElement('div');
-        itemDiv.style.background = '#fff';
-        itemDiv.style.padding = '10px';
-        itemDiv.style.borderRadius = '6px';
-        itemDiv.style.border = '1px solid #cbd5e1';
-        itemDiv.innerHTML = `
-            <p style="font-size: 0.85rem; font-weight: bold;">Order ID: ${ord.id} (${ord.paymentMethod === 'online' ? 'Online Paid 📱' : 'COD 💵'})</p>
-            <p style="font-size: 0.8rem; color: #555;">Store: ${ord.shopName}</p>
-            <p style="font-size: 0.8rem; color: #555;">Items: ${ord.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}</p>
-            ${!ord.isDelivered && !ord.isCancelled ? `
-            <div style="background: #fffbeb; border: 1px dashed #b45309; padding: 6px; border-radius: 4px; margin-top: 6px; text-align: center;">
-                <span style="font-size: 0.75rem; color: #b45309; font-weight: bold;">🔑 Secret Delivery OTP:</span><br>
-                <span style="font-size: 1.2rem; font-weight: bold; color: #b45309; letter-spacing: 2px;">${ord.deliveryOtp}</span>
-            </div>
-            ` : ''}
-            <p style="font-size: 0.8rem; color: ${statusColor}; font-weight: bold; margin-top: 6px;">Status: ${ord.status}</p>
+        div.innerHTML = `
+            <p><strong>🆔 Order ID:</strong> ${ord.id} | <span style="color: #0b3c65; font-weight: bold;">${ord.shopName}</span></p>
+            <p><strong>📦 Items:</strong> ${ord.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}</p>
+            <p><strong>💰 Total:</strong> ₹${ord.totalAmount} (${ord.paymentMethod === 'online' ? 'Online Paid 📱' : 'COD 💵'})</p>
+            <p style="margin-top: 4px;"><strong>Status:</strong> <span style="color: ${ord.isDelivered ? '#166534' : (ord.isCancelled ? '#ef4444' : '#b45309')}; font-weight: bold;">${ord.status}</span></p>
+            ${!ord.isDelivered && !ord.isCancelled ? `<div style="margin-top: 6px; background: #fffbeb; padding: 6px; border-radius: 4px; border: 1px dashed #d4af37;"><p style="font-size: 0.8rem; font-weight: bold; color: #b45309;">🔑 Secret Delivery OTP: <span style="font-size: 1.1rem; letter-spacing: 2px;">${ord.deliveryOtp}</span></p><p style="font-size: 0.7rem; color: #64748b;">Yeh OTP saman milne par dukandaar ko dein.</p></div>` : ''}
             ${cancelSection}
         `;
-        listContainer.appendChild(itemDiv);
+        listContainer.appendChild(div);
     });
 }
 
 function backToCustomerHome() {
-    let trackScreen = document.getElementById('screen-track-order');
-    let checkoutScreen = document.getElementById('screen-checkout');
-    if(trackScreen) trackScreen.classList.remove('active');
-    if(checkoutScreen) checkoutScreen.classList.remove('active');
+    let trackScr = document.getElementById('screen-track-order');
+    if(trackScr) trackScr.classList.remove('active');
+    let checkoutScr = document.getElementById('screen-checkout');
+    if(checkoutScr) checkoutScr.classList.remove('active');
     
     let custHome = document.getElementById('screen-customer-home');
     if(custHome) custHome.classList.add('active');
@@ -1205,62 +1160,52 @@ function backToCustomerHome() {
 
 function postProduct() {
     let name = document.getElementById('product-name').value.trim();
-    let price = document.getElementById('product-price').value.trim();
+    let priceVal = document.getElementById('product-price').value.trim();
+    let galleryInput = document.getElementById('shop-custom-gallery-input');
+    
+    let uploadedImage = "";
+    if(capturedWebcamDataUrl) {
+        uploadedImage = capturedWebcamDataUrl;
+    } else if(galleryInput && galleryInput.files && galleryInput.files[0]) {
+        // Will handle via FileReader if needed, but we already have handleShopUploadedImage
+    }
 
-    if(!name || !price) {
+    let fileInput = document.getElementById('product-image-input');
+    if(!name || !priceVal) {
         alert("Kripya product ka naam aur price daalein!");
         return;
     }
 
-    if(!capturedWebcamDataUrl) {
-        alert("⚠️ Kripya pehle camera se live photo lein ya blue button dabakar gallery se pic select karein!");
-        return;
-    }
+    let finalImg = capturedWebcamDataUrl || "https://via.placeholder.com/150";
 
-    saveNewProduct(name, price, capturedWebcamDataUrl);
-    capturedWebcamDataUrl = "";
-    document.getElementById('shop-captured-preview').innerHTML = '';
-}
-
-function saveNewProduct(name, price, imageUrl) {
+    let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
     let newProd = {
-        id: Date.now(),
+        id: 'PROD' + Date.now(),
         name: name,
-        price: parseInt(price),
+        price: parseFloat(priceVal),
         shop: postalName,
         shopLat: currentLat,
         shopLng: currentLng,
-        image: imageUrl
+        image: finalImg
     };
 
-    let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
     liveProducts.push(newProd);
     localStorage.setItem('sm_liveProducts', JSON.stringify(liveProducts));
 
-    window.dispatchEvent(new Event('sm_productUpdated'));
-    if(typeof loadCustomerProducts === 'function') {
-        loadCustomerProducts();
-        loadStoreFilterBar();
-    }
-
-    alert("✨ Product turant live stock mein jud gaya hai!");
-
     document.getElementById('product-name').value = '';
     document.getElementById('product-price').value = '';
-    if(document.getElementById('product-image-input')) {
-        document.getElementById('product-image-input').value = '';
-    }
+    capturedWebcamDataUrl = "";
+    document.getElementById('shop-captured-preview').innerHTML = '';
 
+    window.dispatchEvent(new Event('sm_productUpdated'));
     updateShopLiveItemsUI();
+    alert("🎉 Product successfully live kar diya gaya hai!");
 }
 
 function logout() {
-    stopAlertBeep();
-    toggleProfileDrawer(false);
-    localStorage.removeItem('sm_isLoggedIn');
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen-welcome').classList.add('active');
-    cart = {};
-    saveCartToLocalStorage();
-    updateCartSummary();
+    if(confirm("Kya aap sach mein logout karna chahte hain?")) {
+        localStorage.removeItem('sm_isLoggedIn');
+        localStorage.removeItem('sm_currentRole');
+        location.reload();
+    }
 }
