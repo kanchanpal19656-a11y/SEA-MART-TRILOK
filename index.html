@@ -169,27 +169,30 @@
         <!-- Customer Product Grid -->
         <div id="customer-product-grid" class="customer-product-grid"></div>
 
-        <!-- Floating Cart / Order Place Bar (Niche Toolbar ke theek upar) -->
-        <div class="floating-cart-footer">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; font-weight: bold; color: #1e293b;">
-                <span>Total Items: <span id="cart-count">0</span></span>
-                <span>Total: ₹<span id="cart-total">0</span></span>
+        <!-- UNIFIED BOTTOM CONTAINER (Cart Footer + App Toolbar Stacked Cleanly) -->
+        <div class="customer-bottom-container">
+            <!-- Floating Cart / Order Place Bar -->
+            <div class="floating-cart-footer">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; font-weight: bold; color: #1e293b;">
+                    <span>Total Items: <span id="cart-count">0</span></span>
+                    <span>Total: ₹<span id="cart-total">0</span></span>
+                </div>
+                <button onclick="openCheckoutScreen()" style="width: 100%; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 6px; font-size: 0.95rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    🛍️ Order Place Karein
+                </button>
             </div>
-            <button onclick="openCheckoutScreen()" style="width: 100%; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 6px; font-size: 0.95rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                🛍️ Order Place Karein
-            </button>
-        </div>
 
-        <!-- App Bottom Toolbar (Bilkul Real App Jaisa Niche Bar) -->
-        <div class="app-bottom-toolbar">
-            <button class="toolbar-btn active" onclick="backToCustomerHome()">
-                <span class="icon">🏠</span>
-                Home
-            </button>
-            <button class="toolbar-btn" onclick="openTrackOrderModal()">
-                <span class="icon">📦</span>
-                Track Order
-            </button>
+            <!-- App Bottom Toolbar -->
+            <div class="app-bottom-toolbar">
+                <button class="toolbar-btn active" onclick="backToCustomerHome()">
+                    <span class="icon">🏠</span>
+                    Home
+                </button>
+                <button class="toolbar-btn" onclick="openTrackOrderModal()">
+                    <span class="icon">📦</span>
+                    Track Order
+                </button>
+            </div>
         </div>
     </div>
 
