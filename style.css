@@ -49,10 +49,10 @@ body {
 
 /* Customer Home Screen padding taaki content bottom bar ke peeche na chupe */
 #screen-customer-home {
-    padding-bottom: 155px !important; 
+    padding-bottom: 160px !important; 
 }
 
-/* Professional Unified Bottom Container fixed at absolute bottom */
+/* Professional Unified Bottom Container fixed at absolute screen bottom */
 .customer-bottom-container {
     position: absolute;
     bottom: 0;
@@ -60,15 +60,16 @@ body {
     width: 100%;
     z-index: 1000;
     background: #ffffff;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
     border-top-left-radius: 16px;
     border-top-right-radius: 16px;
+    border-top: 1px solid #e2e8f0;
 }
 
 /* Floating Cart & Order Place Box */
 .floating-cart-footer {
     background: #ffffff;
-    padding: 10px 16px;
+    padding: 10px 16px 6px 16px;
     box-sizing: border-box;
 }
 
@@ -79,7 +80,7 @@ body {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    padding: 8px 0 12px 0;
+    padding: 6px 0 10px 0;
     box-sizing: border-box;
 }
 
@@ -91,7 +92,7 @@ body {
     align-items: center;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #94a3b8;
+    color: #64748b;
     cursor: pointer;
     flex: 1;
     transition: 0.2s ease;
@@ -102,7 +103,7 @@ body {
 }
 
 .toolbar-btn span.icon {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
     margin-bottom: 2px;
     background: #f8fafc;
     width: 36px;
