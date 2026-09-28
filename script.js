@@ -16,7 +16,6 @@ if(!localStorage.getItem('sm_liveProducts')) {
     localStorage.setItem('sm_liveProducts', JSON.stringify(initialProducts));
 }
 
-// Cart ko localStorage se load karne ka logic taaki refresh par data na ude
 let cart = JSON.parse(localStorage.getItem('sea_mart_cart')) || {};
 
 function saveCartToLocalStorage() {
@@ -26,10 +25,9 @@ function saveCartToLocalStorage() {
 let alertInterval = null;
 let shopCameraStream = null;
 let capturedWebcamDataUrl = "";
-let selectedPaymentMethod = "cod"; // 'cod' ya 'online'
+let selectedPaymentMethod = "cod";
 
 window.addEventListener('DOMContentLoaded', () => {
-    // Page load hone par cart summary update karein taaki data bana rahe
     updateCartSummary();
 
     let isLoggedIn = localStorage.getItem('sm_isLoggedIn');
@@ -104,8 +102,14 @@ function toggleProfileDrawer(open, role = 'customer') {
     let drawer = document.getElementById('profile-drawer');
     if(open) {
         document.getElementById('drawer-user-name').innerText = loggedInUserName;
-        document.getElementById('drawer-user-role').innerText = (role === 'shopkeeper' ? 'Dukandaar (Seller)' : 'Customer');
+        document.getElementById('drawer-user-role').innerText = (currentRole === 'shopkeeper' ? 'Dukandaar (Seller)' : 'Customer');
         drawer.classList.add('open');
+        
+        // Kewal Dukandaar (Seller) ke profile drawer me UPI settings dikhengi, customer ke me nahi
+        let upiBox = document.getElementById('profile-drawer-upi-box');
+        if(upiBox) {
+            upiBox.style.display = (currentRole === 'shopkeeper') ? 'block' : 'none';
+        }
         if(currentRole === 'shopkeeper') {
             injectUpiSettingsIntoProfileDrawer();
         }
@@ -403,9 +407,7 @@ function updateCartQty(productId, change) {
         }
     }
     
-    // Cart update hone ke baad localStorage me save karein
     saveCartToLocalStorage();
-    
     updateCartSummary();
     loadCustomerProducts();
 }
@@ -421,7 +423,6 @@ function updateCartSummary() {
     if(totalEl) totalEl.innerText = totalAmount;
 }
 
-// Jab customer "Order Place Karein" button dabaye tabhi checkout screen khulegi
 function openCheckoutScreen() {
     let itemsArr = Object.values(cart);
     if(itemsArr.length === 0) {
@@ -571,7 +572,7 @@ function placeOrderFromCheckout() {
     alert("🛒 Order successfully place ho gaya!");
 
     cart = {};
-    saveCartToLocalStorage(); // Order place hone par cart clear karke storage update karein
+    saveCartToLocalStorage();
     updateCartSummary();
 
     startShopkeeperAlarm();
@@ -609,7 +610,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
     }
 }
 
@@ -662,18 +663,22 @@ function injectGalleryButtonIntoShopUI() {
     previewBox.parentNode.insertBefore(containerDiv, previewBox);
 }
 
+// Yeh function sirf Dukandaar ke profile drawer me UPI settings ko inject karega agar pehle se nahi hai
 function injectUpiSettingsIntoProfileDrawer() {
     let drawer = document.getElementById('profile-drawer');
     if(!drawer) return;
 
     if(document.getElementById('profile-drawer-upi-box')) {
+        let upiBox = document.getElementById('profile-drawer-upi-box');
+        upiBox.style.display = (currentRole === 'shopkeeper') ? 'block' : 'none';
         loadShopUpiSettings();
         return;
     }
 
     let upiBox = document.createElement('div');
     upiBox.id = 'profile-drawer-upi-box';
-    upiBox.style.cssText = "margin-top: 20px; padding: 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box;";
+    // Customer hone par yeh hidden rahega, dukandaar hone par dikhega
+    upiBox.style.cssText = `margin-top: 20px; padding: 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; display: ${currentRole === 'shopkeeper' ? 'block' : 'none'};`;
     
     upiBox.innerHTML = `
         <h4 style="font-size: 0.9rem; color: #0b3c65; margin-bottom: 6px;">💳 Dukandaar UPI Settings</h4>
@@ -1211,6 +1216,6 @@ function logout() {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-welcome').classList.add('active');
     cart = {};
-    saveCartToLocalStorage(); // Logout par bhi cart storage clear karein
+    saveCartToLocalStorage();
     updateCartSummary();
 }
