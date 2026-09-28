@@ -42,42 +42,44 @@ body {
     flex-direction: column; 
     background: #ffffff; 
     position: relative; 
-    padding-bottom: 70px; 
     width: 100%;
     box-sizing: border-box;
 }
 .screen.active { display: flex !important; }
 
-/* Customer Home Screen padding taaki niche content chup na ho */
+/* Customer Home Screen padding taaki content bottom bar ke peeche na chupe */
 #screen-customer-home {
-    padding-bottom: 145px; 
+    padding-bottom: 155px !important; 
 }
 
-/* Single Unified Bottom Container for Cart & Toolbar (No Overlap) */
+/* Professional Unified Bottom Container fixed at absolute bottom */
 .customer-bottom-container {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
     z-index: 1000;
-    box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
+    background: #ffffff;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
 }
 
 /* Floating Cart & Order Place Box */
 .floating-cart-footer {
     background: #ffffff;
     padding: 10px 16px;
-    border-top: 1px solid #cbd5e1;
     box-sizing: border-box;
 }
 
-/* App Bottom Toolbar (Niche Navigation Bar) */
+/* Professional App Bottom Toolbar (Modern Navigation Bar) */
 .app-bottom-toolbar {
     background: #ffffff;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid #f1f5f9;
     display: flex;
     justify-content: space-around;
-    padding: 8px 0;
+    align-items: center;
+    padding: 8px 0 12px 0;
     box-sizing: border-box;
 }
 
@@ -88,10 +90,11 @@ body {
     flex-direction: column;
     align-items: center;
     font-size: 0.75rem;
-    font-weight: bold;
-    color: #64748b;
+    font-weight: 600;
+    color: #94a3b8;
     cursor: pointer;
     flex: 1;
+    transition: 0.2s ease;
 }
 
 .toolbar-btn.active, .toolbar-btn:hover {
@@ -99,8 +102,21 @@ body {
 }
 
 .toolbar-btn span.icon {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     margin-bottom: 2px;
+    background: #f8fafc;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: 0.2s;
+}
+
+.toolbar-btn.active span.icon {
+    background: #e0f2fe;
+    color: var(--primary);
 }
 
 /* Fixed Dynamic Checkout Screen Styling */
@@ -288,7 +304,7 @@ button:hover { background: var(--primary-dark); }
     border-color: var(--primary);
 }
 
-.customer-product-grid { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; padding-bottom: 10px; max-height: 280px; }
+.customer-product-grid { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; padding-bottom: 10px; }
 .customer-product-card {
     background: var(--white);
     border: 1px solid #e2e8f0;
