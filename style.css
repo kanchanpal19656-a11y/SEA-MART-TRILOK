@@ -48,6 +48,63 @@ body {
 }
 .screen.active { display: flex !important; }
 
+/* Customer Home Screen padding taaki content niche chup na ho */
+#screen-customer-home {
+    padding-bottom: 130px; 
+}
+
+/* Fixed Bottom App Toolbar (Real App Jaisa Niche Bar) */
+.app-bottom-toolbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #ffffff;
+    border-top: 1px solid #cbd5e1;
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+    z-index: 1000;
+    box-sizing: border-box;
+}
+
+.toolbar-btn {
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #64748b;
+    cursor: pointer;
+    flex: 1;
+}
+
+.toolbar-btn.active, .toolbar-btn:hover {
+    color: var(--primary);
+}
+
+.toolbar-btn span.icon {
+    font-size: 1.2rem;
+    margin-bottom: 2px;
+}
+
+/* Floating Cart & Order Place Box (Toolbar ke theek upar) */
+.floating-cart-footer {
+    position: fixed;
+    bottom: 55px; 
+    left: 0;
+    width: 100%;
+    background: #ffffff;
+    padding: 10px 16px;
+    border-top: 1px solid #e2e8f0;
+    box-sizing: border-box;
+    z-index: 999;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.03);
+}
+
 /* Fixed Dynamic Checkout Screen Styling */
 #screen-checkout {
     position: absolute;
@@ -278,29 +335,6 @@ button:hover { background: var(--primary-dark); }
 .dash-action-bar-btn:hover { background: var(--primary-dark); }
 .dash-action-bar-btn.accent { background: var(--accent); color: #1e293b; }
 .dash-action-bar-btn.success-btn { background: var(--success); color: white; }
-
-.track-order-widget {
-    position: absolute;
-    bottom: 20px;
-    left: 15px;
-    right: 15px;
-    background: var(--primary);
-    color: white;
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    font-weight: bold;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    cursor: pointer;
-    z-index: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    text-align: center;
-}
-
-.checkout-box { background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px; margin-top: 8px; margin-bottom: 45px; }
 
 .shop-sub-section { display: none; }
 .shop-sub-section.active-sub { display: block; }
