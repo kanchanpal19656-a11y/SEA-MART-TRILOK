@@ -50,7 +50,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('storage', (e) => {
-    if(e.key === 'sm_liveProducts') {
+    if(e.key === 'sm_liveProducts' || e.key === 'sm_registeredUsers') {
         if(currentRole === 'customer' && document.getElementById('screen-customer-home').classList.contains('active')) {
             loadStoreFilterBar();
             loadCustomerProducts();
@@ -315,10 +315,31 @@ function loadStoreFilterBar() {
     if(!bar) return;
     bar.innerHTML = '';
 
-    let chip = document.createElement('div');
-    chip.className = 'store-chip active-chip';
-    chip.innerText = '🏪 Sea Mart (2 km Radius)';
-    bar.appendChild(chip);
+    // "All Stores" option chip
+    let allChip = document.createElement('div');
+    allChip.className = `store-chip ${selectedStoreFilter === 'All' ? 'active-chip' : ''}`;
+    allChip.innerText = '🌟 Sabhi Dukanen (All)';
+    allChip.onclick = () => {
+        selectedStoreFilter = 'All';
+        loadStoreFilterBar();
+        loadCustomerProducts();
+    };
+    bar.appendChild(allChip);
+
+    // Get all registered shopkeepers
+    let shopkeepers = registeredUsers.filter(u => u.role === 'shopkeeper' && u.shopName);
+    
+    shopkeepers.forEach(shop => {
+        let chip = document.createElement('div');
+        chip.className = `store-chip ${selectedStoreFilter === shop.shopName ? 'active-chip' : ''}`;
+        chip.innerText = `🏪 ${shop.shopName}`;
+        chip.onclick = () => {
+            selectedStoreFilter = shop.shopName;
+            loadStoreFilterBar();
+            loadCustomerProducts();
+        };
+        bar.appendChild(chip);
+    });
 }
 
 function loadCustomerProducts() {
@@ -326,26 +347,22 @@ function loadCustomerProducts() {
     if(!gridContainer) return;
     gridContainer.innerHTML = '';
 
-    let searchInput = document.getElementById('customer-search-input');
-    let searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : "";
-
     let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
 
-    // Strict 2 km radius filter & distance calculation
+    // Filter by distance (2 km radius)
     let filteredProducts = liveProducts.filter(p => {
         let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
         p.distanceText = dist.toFixed(1) + " km";
         return dist <= 2.0;
     });
 
-    if(searchQuery !== "") {
-        filteredProducts = filteredProducts.filter(p => 
-            p.name.toLowerCase().includes(searchQuery)
-        );
+    // Filter by selected shop tab/chip
+    if(selectedStoreFilter !== 'All') {
+        filteredProducts = filteredProducts.filter(p => p.shop === selectedStoreFilter);
     }
 
     if(filteredProducts.length === 0) {
-        gridContainer.innerHTML = '<p style="font-size: 0.8rem; color: #777; text-align: center; grid-column: 1 / -1;">2 km ke daayre mein abhi koi live item uplabdh nahi hai.</p>';
+        gridContainer.innerHTML = '<p style="font-size: 0.8rem; color: #777; text-align: center; grid-column: 1 / -1;">2 km ke daayre mein is dukan par abhi koi live item uplabdh nahi hai.</p>';
         return;
     }
 
@@ -358,7 +375,7 @@ function loadCustomerProducts() {
             <div class="customer-prod-info">
                 <h4>${prod.name}</h4>
                 <p style="color: #b45309; font-weight: bold;">₹${prod.price}</p>
-                <p style="font-size: 0.75rem;">🏪 Sea Mart • 📍 ${prod.distanceText}</p>
+                <p style="font-size: 0.75rem;">🏪 ${prod.shop} • 📍 ${prod.distanceText}</p>
             </div>
             <div class="qty-controls">
                 ${qty > 0 ? `<button class="qty-btn minus" onclick="updateCartQty('${prod.id}', -1)">-</button><span style="font-size: 0.9rem; font-weight: bold; min-width: 16px; text-align: center;">${qty}</span>` : ''}
@@ -438,7 +455,7 @@ function renderCheckoutContent() {
             <h2 style="color: #0b3c65; margin-bottom: 10px;">🛒 Order Details & Payment</h2>
             
             <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                <p style="font-weight: bold; margin-bottom: 6px; color: #1e293b;">Store: Sea Mart</p>
+                <p style="font-weight: bold; margin-bottom: 6px; color: #1e293b;">Store: ${shopName || 'Local Store'}</p>
                 <div style="max-height: 150px; overflow-y: auto; margin-bottom: 8px;">
                     ${itemsArr.map(i => `<div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding: 4px 0; border-bottom: 1px dashed #e2e8f0;"><span>${i.name} (x${i.quantity})</span><strong>₹${i.price * i.quantity}</strong></div>`).join('')}
                 </div>
@@ -588,7 +605,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
     }
 }
 
@@ -960,7 +977,7 @@ function updateShopSoldItemsUI() {
     });
 }
 
-function downloadShopReportPDF() {
+function downloadSoldItemsPDF() {
     let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
     let mySoldItems = soldItemsHistory.filter(s => s.shopName === postalName);
 
@@ -1107,7 +1124,7 @@ function openTrackOrderModal() {
         itemDiv.style.border = '1px solid #cbd5e1';
         itemDiv.innerHTML = `
             <p style="font-size: 0.85rem; font-weight: bold;">Order ID: ${ord.id} (${ord.paymentMethod === 'online' ? 'Online Paid 📱' : 'COD 💵'})</p>
-            <p style="font-size: 0.8rem; color: #555;">Store: Sea Mart</p>
+            <p style="font-size: 0.8rem; color: #555;">Store: ${ord.shopName}</p>
             <p style="font-size: 0.8rem; color: #555;">Items: ${ord.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}</p>
             ${!ord.isDelivered && !ord.isCancelled ? `
             <div style="background: #fffbeb; border: 1px dashed #b45309; padding: 6px; border-radius: 4px; margin-top: 6px; text-align: center;">
