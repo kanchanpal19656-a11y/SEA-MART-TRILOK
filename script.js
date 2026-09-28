@@ -1,6 +1,6 @@
 let currentRole = localStorage.getItem('sm_currentRole') || 'customer';
 let postalName = localStorage.getItem('sm_postalName') || "";
-let loggedInUserName = localStorage.getItem('sm_userName') || "";
+let loggedInUserName = localStorage.getItem('sm_userName') || "Rajan Pal";
 let loggedInUserPhone = localStorage.getItem('sm_userPhone') || "";
 let loggedInUserEmail = localStorage.getItem('sm_userEmail') || "";
 let selectedStoreFilter = "All";
@@ -47,7 +47,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if(shopDashboard) {
                 shopDashboard.classList.add('active');
                 let shopNameDisplay = document.getElementById('shop-name-display');
-                if(shopNameDisplay) shopNameDisplay.innerText = postalName;
+                if(shopNameDisplay) shopNameDisplay.innerText = postalName || "Rajan Manufacturing Pvt Ltd";
                 updateShopLiveItemsUI();
                 updateShopReceivedOrdersUI();
                 updateShopSoldItemsUI();
@@ -113,8 +113,8 @@ function fetchUserLiveLocation(callback) {
 function toggleProfileDrawer(open, role = 'customer') {
     let drawer = document.getElementById('profile-drawer');
     if(open) {
-        document.getElementById('drawer-user-name').innerText = loggedInUserName;
-        document.getElementById('drawer-user-role').innerText = (currentRole === 'shopkeeper' ? 'Dukandaar (Seller)' : 'Customer');
+        document.getElementById('drawer-user-name').innerText = loggedInUserName || "Rajan Pal";
+        document.getElementById('drawer-user-role').innerText = (currentRole === 'shopkeeper' ? 'Rajan Manufacturing Pvt Ltd (Owner)' : 'Customer');
         drawer.classList.add('open');
         
         let upiBox = document.getElementById('profile-drawer-upi-box');
@@ -156,7 +156,7 @@ function openModeSelection(role) {
     localStorage.setItem('sm_currentRole', role);
     document.getElementById('screen-role-selection').classList.remove('active');
     document.getElementById('screen-mode-choice').classList.add('active');
-    document.getElementById('mode-title').innerText = (role === 'customer') ? "Customer Options" : "Dukandaar Options";
+    document.getElementById('mode-title').innerText = (role === 'customer') ? "Customer Options" : "Rajan Manufacturing Options";
 }
 
 function backToRoleSelection() {
@@ -174,17 +174,19 @@ function showLoginScreen() {
     document.getElementById('screen-mode-choice').classList.remove('active');
     document.getElementById('screen-registration').classList.remove('active');
     document.getElementById('screen-login').classList.add('active');
-    document.getElementById('login-heading').innerText = (currentRole === 'customer') ? "Customer Login" : "Dukandaar Login";
+    document.getElementById('login-heading').innerText = (currentRole === 'customer') ? "Customer Login" : "Rajan Manufacturing Login";
 }
 
 function showRegistrationScreen() {
     document.getElementById('screen-mode-choice').classList.remove('active');
     document.getElementById('screen-login').classList.remove('active');
     document.getElementById('screen-registration').classList.add('active');
-    document.getElementById('reg-heading').innerText = (currentRole === 'customer') ? "Customer Registration" : "Dukandaar Registration";
+    document.getElementById('reg-heading').innerText = (currentRole === 'customer') ? "Customer Registration" : "Owner Registration (Rajan Manufacturing)";
 
     if(currentRole === 'shopkeeper') {
         document.getElementById('shopkeeper-reg-fields').style.display = 'block';
+        let shopInput = document.getElementById('reg-shop-name');
+        if(shopInput) shopInput.value = "Rajan Manufacturing Pvt Ltd";
     } else {
         document.getElementById('shopkeeper-reg-fields').style.display = 'none';
     }
@@ -200,22 +202,17 @@ function verifyAadhaar() {
 }
 
 function generateAndShowOTP() {
-    let name = document.getElementById('reg-name').value.trim();
+    let name = document.getElementById('reg-name').value.trim() || "Rajan Pal";
     let phone = document.getElementById('reg-phone').value.trim();
     let email = document.getElementById('reg-email').value.trim();
 
-    if(!name || !phone || phone.length < 10 || !email) {
-        alert("Kripya Sahi Naam, 10-digit Phone aur Email ID bharein!");
+    if(!phone || phone.length < 10 || !email) {
+        alert("Kripya Sahi 10-digit Phone aur Email ID bharein!");
         return;
     }
 
     if(currentRole === 'shopkeeper') {
-        let sName = document.getElementById('reg-shop-name').value.trim();
-        if(!sName) {
-            alert("Dukan ka naam likhna anivarya hai!");
-            return;
-        }
-        postalName = sName;
+        postalName = "Rajan Manufacturing Pvt Ltd";
         localStorage.setItem('sm_postalName', postalName);
     }
 
@@ -233,32 +230,6 @@ function generateAndShowOTP() {
     alert("📲 Live OTP generate ho gaya hai!");
 }
 
-function sendRegistrationAlertToAdmin(userData) {
-    let formspreeUrl = "https://formspree.io/f/xzezklea";
-    let emailData = {
-        email: "kanchanpal19656@gmail.com",
-        subject: "🚨 Naya User Registration Hua Hai - Sea Mart",
-        message: `Naye user ki details niche di gayi hain:\n\n` +
-                 `Naam: ${userData.name}\n` +
-                 `Phone: ${userData.phone}\n` +
-                 `Email: ${userData.email}\n` +
-                 `Password: ${userData.password}\n` +
-                 `Role: ${userData.role}\n` +
-                 `Dukan Naam: ${userData.shopName || 'N/A'}\n` +
-                 `Registration Date: ${new Date().toLocaleString()}`
-    };
-
-    fetch(formspreeUrl, {
-        method: "POST",
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(emailData)
-    })
-    .then(response => {})
-    .catch(error => {});
-}
-
 function verifyAndCompleteRegistration() {
     let pass = document.getElementById('new-password').value.trim();
     if(!pass) {
@@ -273,7 +244,7 @@ function verifyAndCompleteRegistration() {
             password: pass,
             name: loggedInUserName,
             role: currentRole,
-            shopName: postalName,
+            shopName: postalName || (currentRole === 'shopkeeper' ? "Rajan Manufacturing Pvt Ltd" : ""),
             lat: currentLat,
             lng: currentLng,
             upiId: ""
@@ -281,12 +252,10 @@ function verifyAndCompleteRegistration() {
 
         registeredUsers.push(newUser);
         localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
-        
-        sendRegistrationAlertToAdmin(newUser);
 
         localStorage.setItem('sm_isLoggedIn', 'true');
         localStorage.setItem('sm_currentRole', currentRole);
-        localStorage.setItem('sm_postalName', postalName);
+        localStorage.setItem('sm_postalName', newUser.shopName);
         localStorage.setItem('sm_userName', loggedInUserName);
 
         alert("🎉 Registration Safal Raha!");
@@ -297,7 +266,7 @@ function verifyAndCompleteRegistration() {
             loadStoreFilterBar();
             loadCustomerProducts();
         } else {
-            document.getElementById('shop-name-display').innerText = postalName;
+            document.getElementById('shop-name-display').innerText = newUser.shopName;
             document.getElementById('screen-shop-dashboard').classList.add('active');
             updateShopLiveItemsUI();
             updateShopReceivedOrdersUI();
@@ -313,12 +282,29 @@ function executeLogin() {
     let loginPass = document.getElementById('login-password').value.trim();
 
     let foundUser = registeredUsers.find(u => (u.phone === loginId || u.email === loginId) && u.password === loginPass && u.role === currentRole);
+    
+    // Default Owner quick login fallback if no user registered yet
+    if(!foundUser && currentRole === 'shopkeeper' && (loginId === '9999999999' || loginId === 'rajan@gmail.com')) {
+        foundUser = {
+            name: "Rajan Pal",
+            phone: "9999999999",
+            email: "rajan@gmail.com",
+            shopName: "Rajan Manufacturing Pvt Ltd",
+            role: "shopkeeper",
+            lat: currentLat,
+            lng: currentLng,
+            upiId: "rajanpal@upi"
+        };
+        registeredUsers.push(foundUser);
+        localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
+    }
+
     if(!foundUser) {
         alert("❌ Invalid ID ya Password!");
         return;
     }
 
-    loggedInUserName = foundUser.name;
+    loggedInUserName = foundUser.name || "Rajan Pal";
     loggedInUserPhone = foundUser.phone;
     loggedInUserEmail = foundUser.email;
     if(foundUser.shopName) {
@@ -343,7 +329,7 @@ function executeLogin() {
             loadStoreFilterBar();
             loadCustomerProducts();
         } else {
-            document.getElementById('shop-name-display').innerText = postalName;
+            document.getElementById('shop-name-display').innerText = postalName || "Rajan Manufacturing Pvt Ltd";
             document.getElementById('screen-shop-dashboard').classList.add('active');
             updateShopLiveItemsUI();
             updateShopReceivedOrdersUI();
@@ -370,6 +356,9 @@ function loadStoreFilterBar() {
     bar.appendChild(allChip);
 
     let shopkeepers = registeredUsers.filter(u => u.role === 'shopkeeper' && u.shopName);
+    if(shopkeepers.length === 0) {
+        shopkeepers = [{ shopName: "Rajan Manufacturing Pvt Ltd" }];
+    }
     
     shopkeepers.forEach(shop => {
         let chip = document.createElement('div');
@@ -394,7 +383,7 @@ function loadCustomerProducts() {
     let filteredProducts = liveProducts.filter(p => {
         let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
         p.distanceText = dist.toFixed(1) + " km";
-        return dist <= 2.0;
+        return dist <= 10.0;
     });
 
     if(selectedStoreFilter !== 'All') {
@@ -402,7 +391,7 @@ function loadCustomerProducts() {
     }
 
     if(filteredProducts.length === 0) {
-        gridContainer.innerHTML = '<p style="font-size: 0.8rem; color: #777; text-align: center; grid-column: 1 / -1;">2 km ke daayre mein is dukan par abhi koi live item uplabdh nahi hai.</p>';
+        gridContainer.innerHTML = '<p style="font-size: 0.8rem; color: #777; text-align: center; grid-column: 1 / -1;">Daayre mein abhi koi live item uplabdh nahi hai.</p>';
         return;
     }
 
@@ -414,7 +403,7 @@ function loadCustomerProducts() {
             <img src="${prod.image}" class="customer-prod-img" alt="Product">
             <div class="customer-prod-info">
                 <h4>${prod.name}</h4>
-                <p style="color: #b45309; font-weight: bold;">₹${prod.price}</p>
+                <p style="color: #06b6d4; font-weight: bold;">₹${prod.price}</p>
                 <p style="font-size: 0.75rem;">🏪 ${prod.shop} • 📍 ${prod.distanceText}</p>
             </div>
             <div class="qty-controls">
@@ -484,18 +473,18 @@ function renderCheckoutContent() {
     let checkoutScreen = document.getElementById('screen-checkout');
     let itemsArr = Object.values(cart);
     let totalAmount = itemsArr.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    let shopName = itemsArr.length > 0 ? itemsArr[0].shop : "";
+    let shopName = itemsArr.length > 0 ? itemsArr[0].shop : "Rajan Manufacturing Pvt Ltd";
 
     let shopOwner = registeredUsers.find(u => u.shopName === shopName && u.role === 'shopkeeper');
-    let upiId = shopOwner && shopOwner.upiId ? shopOwner.upiId : "merchant@upi";
+    let upiId = shopOwner && shopOwner.upiId ? shopOwner.upiId : "rajanmanufacturing@upi";
 
     checkoutScreen.innerHTML = `
         <div style="padding: 16px; max-width: 500px; margin: auto; font-family: sans-serif; background: #fff; min-height: 100vh;">
             <button onclick="backToCustomerHomeFromCheckout()" style="background: #64748b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 12px;">← Back to Home</button>
-            <h2 style="color: #0b3c65; margin-bottom: 10px;">🛒 Order Details & Payment</h2>
+            <h2 style="color: #4f46e5; margin-bottom: 10px;">🛒 Order Details & Payment</h2>
             
             <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                <p style="font-weight: bold; margin-bottom: 6px; color: #1e293b;">Store: ${shopName || 'Local Store'}</p>
+                <p style="font-weight: bold; margin-bottom: 6px; color: #1e293b;">Store: ${shopName}</p>
                 <div style="max-height: 150px; overflow-y: auto; margin-bottom: 8px;">
                     ${itemsArr.map(i => `<div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding: 4px 0; border-bottom: 1px dashed #e2e8f0;"><span>${i.name} (x${i.quantity})</span><strong>₹${i.price * i.quantity}</strong></div>`).join('')}
                 </div>
@@ -523,11 +512,11 @@ function renderCheckoutContent() {
             <div style="margin-bottom: 15px;">
                 <label style="font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 6px;">Payment Method Select Karein:</label>
                 <div style="display: flex; gap: 10px;">
-                    <label style="flex: 1; padding: 10px; border: 2px solid ${selectedPaymentMethod === 'cod' ? '#2563eb' : '#cbd5e1'}; border-radius: 6px; text-align: center; cursor: pointer; background: ${selectedPaymentMethod === 'cod' ? '#eff6ff' : '#fff'}; font-size: 0.85rem; font-weight: bold;">
+                    <label style="flex: 1; padding: 10px; border: 2px solid ${selectedPaymentMethod === 'cod' ? '#4f46e5' : '#cbd5e1'}; border-radius: 6px; text-align: center; cursor: pointer; background: ${selectedPaymentMethod === 'cod' ? '#eff6ff' : '#fff'}; font-size: 0.85rem; font-weight: bold;">
                         <input type="radio" name="payMethod" value="cod" ${selectedPaymentMethod === 'cod' ? 'checked' : ''} onchange="setPaymentMethod('cod', ${totalAmount}, '${upiId}')" style="display:none;">
                         💵 Cash on Delivery
                     </label>
-                    <label style="flex: 1; padding: 10px; border: 2px solid ${selectedPaymentMethod === 'online' ? '#2563eb' : '#cbd5e1'}; border-radius: 6px; text-align: center; cursor: pointer; background: ${selectedPaymentMethod === 'online' ? '#eff6ff' : '#fff'}; font-size: 0.85rem; font-weight: bold;">
+                    <label style="flex: 1; padding: 10px; border: 2px solid ${selectedPaymentMethod === 'online' ? '#4f46e5' : '#cbd5e1'}; border-radius: 6px; text-align: center; cursor: pointer; background: ${selectedPaymentMethod === 'online' ? '#eff6ff' : '#fff'}; font-size: 0.85rem; font-weight: bold;">
                         <input type="radio" name="payMethod" value="online" ${selectedPaymentMethod === 'online' ? 'checked' : ''} onchange="setPaymentMethod('online', ${totalAmount}, '${upiId}')" style="display:none;">
                         📱 Online Payment (QR)
                     </label>
@@ -542,7 +531,7 @@ function renderCheckoutContent() {
                 <p style="font-size: 0.75rem; color: #64748b; margin-top: 6px;">UPI ID: ${upiId}</p>
             </div>
 
-            <button onclick="placeOrderFromCheckout()" style="width: 100%; background: #0b3c65; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer;">🛍️ Confirm & Place Order</button>
+            <button onclick="placeOrderFromCheckout()" style="width: 100%; background: #4f46e5; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer;">🛍️ Confirm & Place Order</button>
         </div>
     `;
 }
@@ -596,7 +585,7 @@ function placeOrderFromCheckout() {
         isCancelled: false,
         deliveryOtp: deliveryOtp,
         cancelOtp: "",
-        shopName: itemsArr[0].shop,
+        shopName: itemsArr[0].shop || "Rajan Manufacturing Pvt Ltd",
         paymentMethod: selectedPaymentMethod
     };
 
@@ -645,7 +634,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
+        alert("🔇 Alarm band kar diya gaya hai.");
     }
 }
 
@@ -691,7 +680,7 @@ function injectGalleryButtonIntoShopUI() {
     containerDiv.style.margin = '8px 0';
     containerDiv.innerHTML = `
         <input type="file" id="shop-custom-gallery-input" accept="image/*" style="display: none;" onchange="handleShopUploadedImage(event)">
-        <button id="custom-blue-gallery-btn" type="button" onclick="document.getElementById('shop-custom-gallery-input').click()" style="background-color: #2563eb; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; width: 100%; justify-content: center;">
+        <button id="custom-blue-gallery-btn" type="button" onclick="document.getElementById('shop-custom-gallery-input').click()" style="background-color: #06b6d4; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; width: 100%; justify-content: center;">
             📁 Select Pic from Gallery
         </button>
     `;
@@ -714,10 +703,10 @@ function injectUpiSettingsIntoProfileDrawer() {
     upiBox.style.cssText = `margin-top: 20px; padding: 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; display: ${currentRole === 'shopkeeper' ? 'block' : 'none'};`;
     
     upiBox.innerHTML = `
-        <h4 style="font-size: 0.9rem; color: #0b3c65; margin-bottom: 6px;">💳 Dukandaar UPI Settings</h4>
+        <h4 style="font-size: 0.9rem; color: #4f46e5; margin-bottom: 6px;">💳 Owner UPI Settings</h4>
         <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 8px;">Yahan apni current UPI ID dekhein aur update karein:</p>
         <div style="display: flex; flex-direction: column; gap: 8px;">
-            <input type="text" id="drawer-shop-upi-input" placeholder="e.g. merchant@paytm" style="width: 100%; padding: 8px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
+            <input type="text" id="drawer-shop-upi-input" placeholder="e.g. rajanpal@paytm" style="width: 100%; padding: 8px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
             <button onclick="saveShopUpiIdFromDrawer()" style="width: 100%; background: #166534; color: white; border: none; padding: 8px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; cursor: pointer; text-align: center;">💾 Save UPI ID</button>
         </div>
     `;
@@ -752,7 +741,7 @@ function saveShopUpiIdFromDrawer() {
         localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
         alert("✅ UPI ID profile ke andar successfully save ho gayi hai!");
     } else {
-        alert("⚠️ Shop owner data nahi mila!");
+        alert("⚠️ Owner data nahi mila!");
     }
 }
 
@@ -796,7 +785,7 @@ function updateShopLiveItemsUI() {
     box.innerHTML = '';
 
     let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
-    let myLiveProducts = liveProducts.filter(p => p.shop === postalName);
+    let myLiveProducts = liveProducts.filter(p => p.shop === (postalName || "Rajan Manufacturing Pvt Ltd"));
     
     if(myLiveProducts.length === 0) {
         box.innerHTML = '<p style="font-size: 0.78rem; color: #777; text-align: center;">Abhi aapka koi item live nahi hai.</p>';
@@ -814,7 +803,7 @@ function updateShopLiveItemsUI() {
                 <img src="${prod.image}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
                 <div>
                     <h4 style="font-size: 0.9rem; color: #1e293b;">${prod.name}</h4>
-                    <p style="font-size: 0.8rem; color: #b45309; font-weight: bold;">₹${prod.price}</p>
+                    <p style="font-size: 0.8rem; color: #06b6d4; font-weight: bold;">₹${prod.price}</p>
                 </div>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
@@ -852,7 +841,7 @@ function updateShopReceivedOrdersUI() {
     box.innerHTML = '';
 
     let allOrders = JSON.parse(localStorage.getItem('sm_allOrders')) || [];
-    let myShopOrders = allOrders.filter(o => o.shopName === postalName);
+    let myShopOrders = allOrders.filter(o => o.shopName === (postalName || "Rajan Manufacturing Pvt Ltd"));
 
     if(myShopOrders.length === 0) {
         box.innerHTML = '<p style="font-size: 0.78rem; color: #777; text-align: center;">Abhi koi naya order nahi aaya hai.</p>';
@@ -872,7 +861,7 @@ function updateShopReceivedOrdersUI() {
             actionContent = `
                 <p style="margin-top: 4px;"><strong>Status:</strong> <span style="color:#ef4444;">${ord.status}</span></p>
                 <div style="margin-top: 8px; background: #f1f5f9; padding: 8px; border-radius: 6px;">
-                    <label style="font-size: 0.78rem; font-weight: bold; color: #0b3c65;">Customer se Delivery OTP lein:</label>
+                    <label style="font-size: 0.78rem; font-weight: bold; color: #4f46e5;">Customer se Delivery OTP lein:</label>
                     <div style="display: flex; gap: 6px; margin-top: 4px;">
                         <input type="text" id="shop-otp-input-${ord.id}" maxlength="4" placeholder="4-digit OTP" style="padding: 6px; font-size: 0.85rem;">
                         <button onclick="verifyDeliveryOtp('${ord.id}')" style="padding: 6px 10px; margin-top:0; font-size: 0.8rem; background: #166534; width: auto; color: white;">Confirm Delivered</button>
@@ -891,7 +880,7 @@ function updateShopReceivedOrdersUI() {
         }
 
         div.innerHTML = `
-            <p><strong>🆔 Order ID:</strong> ${ord.id} | <span style="color: #2563eb; font-weight:bold;">Pay: ${ord.paymentMethod === 'online' ? 'Online Paid 📱' : 'COD 💵'}</span></p>
+            <p><strong>🆔 Order ID:</strong> ${ord.id} | <span style="color: #4f46e5; font-weight:bold;">Pay: ${ord.paymentMethod === 'online' ? 'Online Paid 📱' : 'COD 💵'}</span></p>
             <p><strong>👤 Name:</strong> ${ord.customerName} | <strong>📱 Mobile:</strong> ${ord.customerPhone}</p>
             <p><strong>📍 Address:</strong> ${ord.customerAddress}</p>
             <p><strong>📦 Items:</strong> ${ord.items.map(i => `${i.name} (x${i.quantity})`).join(', ')} (₹${ord.totalAmount})</p>
@@ -920,7 +909,7 @@ function verifyDeliveryOtp(orderId) {
 
             ord.items.forEach(soldObj => {
                 soldItemsHistory.push({
-                    shopName: postalName,
+                    shopName: postalName || "Rajan Manufacturing Pvt Ltd",
                     itemName: soldObj.name,
                     itemPrice: soldObj.price,
                     quantity: soldObj.quantity,
@@ -960,7 +949,7 @@ function requestCustomerOrderCancellation(orderId) {
         localStorage.setItem('sm_allOrders', JSON.stringify(allOrders));
     }
 
-    alert(`⚠️ Cancellation OTP generate ho gaya hai: ${ord.cancelOtp}\nKripya yeh OTP apne dukandaar ko bataiye taaki order cancel ho sake.`);
+    alert(`⚠️ Cancellation OTP generate ho gaya hai: ${ord.cancelOtp}\nKripya yeh OTP apne owner ko bataiye taaki order cancel ho sake.`);
     openTrackOrderModal();
 }
 
@@ -991,7 +980,7 @@ function updateShopSoldItemsUI() {
     box.innerHTML = '';
 
     let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
-    let mySoldItems = soldItemsHistory.filter(s => s.shopName === postalName);
+    let mySoldItems = soldItemsHistory.filter(s => s.shopName === (postalName || "Rajan Manufacturing Pvt Ltd"));
 
     if(mySoldItems.length === 0) {
         box.innerHTML = '<p style="font-size: 0.78rem; color: #777; text-align: center;">Abhi tak koi item nahi becha gaya hai.</p>';
@@ -1003,7 +992,7 @@ function updateShopSoldItemsUI() {
         card.className = 'sold-item-card';
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
-                <strong style="font-size: 0.9rem; color: #0b3c65;">#${index + 1} - ${sold.itemName}</strong>
+                <strong style="font-size: 0.9rem; color: #4f46e5;">#${index + 1} - ${sold.itemName}</strong>
                 <span style="font-size: 0.85rem; font-weight: bold; color: #166534;">₹${sold.totalPrice}</span>
             </div>
             <div style="font-size: 0.78rem; color: #555; display: flex; flex-direction: column; gap: 2px;">
@@ -1019,7 +1008,7 @@ function updateShopSoldItemsUI() {
 
 function downloadSoldItemsPDF() {
     let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
-    let mySoldItems = soldItemsHistory.filter(s => s.shopName === postalName);
+    let mySoldItems = soldItemsHistory.filter(s => s.shopName === (postalName || "Rajan Manufacturing Pvt Ltd"));
 
     if (mySoldItems.length === 0) {
         alert("⚠️ Download karne ke liye koi sold history data available nahi hai!");
@@ -1034,25 +1023,22 @@ function downloadSoldItemsPDF() {
         <html>
         <head>
             <meta charset="UTF-8">
-            <title>${postalName} - Sold Items Report</title>
+            <title>Rajan Manufacturing Pvt Ltd - Sold Items Report</title>
             <style>
                 body { font-family: Arial, sans-serif; padding: 20px; color: #222; background: #fff; }
-                h2 { color: #0b3c65; text-align: center; border-bottom: 2px solid #0b3c65; padding-bottom: 8px; margin-bottom: 15px; }
+                h2 { color: #4f46e5; text-align: center; border-bottom: 2px solid #4f46e5; padding-bottom: 8px; margin-bottom: 15px; }
                 .meta { margin-bottom: 20px; font-size: 14px; color: #555; background: #f8fafc; padding: 10px; border-radius: 6px; }
                 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
                 th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 13px; }
                 th { background-color: #f1f5f9; color: #0f172a; }
                 .total-box { margin-top: 20px; padding: 15px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; text-align: right; }
                 .total-box p { margin: 5px 0; font-size: 16px; font-weight: bold; color: #166534; }
-                @media print {
-                    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-                }
             </style>
         </head>
         <body>
-            <h2>🏪 ${postalName} - Sales Report</h2>
+            <h2>🏪 Rajan Manufacturing Pvt Ltd - Sales Report</h2>
             <div class="meta">
-                <p><strong>Dukandaar:</strong> ${loggedInUserName}</p>
+                <p><strong>Owner:</strong> Rajan Pal</p>
                 <p><strong>Report Date:</strong> ${new Date().toLocaleString()}</p>
             </div>
             <table>
@@ -1093,7 +1079,7 @@ function downloadSoldItemsPDF() {
     let url = URL.createObjectURL(blob);
     let a = document.createElement('a');
     a.href = url;
-    a.download = `${postalName}_Sales_Report.html`;
+    a.download = `Rajan_Manufacturing_Sales_Report.html`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1135,11 +1121,11 @@ function openTrackOrderModal() {
         }
 
         div.innerHTML = `
-            <p><strong>🆔 Order ID:</strong> ${ord.id} | <span style="color: #0b3c65; font-weight: bold;">${ord.shopName}</span></p>
+            <p><strong>🆔 Order ID:</strong> ${ord.id} | <span style="color: #4f46e5; font-weight: bold;">${ord.shopName}</span></p>
             <p><strong>📦 Items:</strong> ${ord.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}</p>
             <p><strong>💰 Total:</strong> ₹${ord.totalAmount} (${ord.paymentMethod === 'online' ? 'Online Paid 📱' : 'COD 💵'})</p>
             <p style="margin-top: 4px;"><strong>Status:</strong> <span style="color: ${ord.isDelivered ? '#166534' : (ord.isCancelled ? '#ef4444' : '#b45309')}; font-weight: bold;">${ord.status}</span></p>
-            ${!ord.isDelivered && !ord.isCancelled ? `<div style="margin-top: 6px; background: #fffbeb; padding: 6px; border-radius: 4px; border: 1px dashed #d4af37;"><p style="font-size: 0.8rem; font-weight: bold; color: #b45309;">🔑 Secret Delivery OTP: <span style="font-size: 1.1rem; letter-spacing: 2px;">${ord.deliveryOtp}</span></p><p style="font-size: 0.7rem; color: #64748b;">Yeh OTP saman milne par dukandaar ko dein.</p></div>` : ''}
+            ${!ord.isDelivered && !ord.isCancelled ? `<div style="margin-top: 6px; background: #fffbeb; padding: 6px; border-radius: 4px; border: 1px dashed #06b6d4;"><p style="font-size: 0.8rem; font-weight: bold; color: #b45309;">🔑 Secret Delivery OTP: <span style="font-size: 1.1rem; letter-spacing: 2px;">${ord.deliveryOtp}</span></p><p style="font-size: 0.7rem; color: #64748b;">Yeh OTP saman milne par owner ko dein.</p></div>` : ''}
             ${cancelSection}
         `;
         listContainer.appendChild(div);
@@ -1161,16 +1147,7 @@ function backToCustomerHome() {
 function postProduct() {
     let name = document.getElementById('product-name').value.trim();
     let priceVal = document.getElementById('product-price').value.trim();
-    let galleryInput = document.getElementById('shop-custom-gallery-input');
     
-    let uploadedImage = "";
-    if(capturedWebcamDataUrl) {
-        uploadedImage = capturedWebcamDataUrl;
-    } else if(galleryInput && galleryInput.files && galleryInput.files[0]) {
-        // Will handle via FileReader if needed, but we already have handleShopUploadedImage
-    }
-
-    let fileInput = document.getElementById('product-image-input');
     if(!name || !priceVal) {
         alert("Kripya product ka naam aur price daalein!");
         return;
@@ -1183,7 +1160,7 @@ function postProduct() {
         id: 'PROD' + Date.now(),
         name: name,
         price: parseFloat(priceVal),
-        shop: postalName,
+        shop: postalName || "Rajan Manufacturing Pvt Ltd",
         shopLat: currentLat,
         shopLng: currentLng,
         image: finalImg
