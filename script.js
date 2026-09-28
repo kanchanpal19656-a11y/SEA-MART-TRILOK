@@ -315,7 +315,6 @@ function loadStoreFilterBar() {
     if(!bar) return;
     bar.innerHTML = '';
 
-    // "All Stores" option chip
     let allChip = document.createElement('div');
     allChip.className = `store-chip ${selectedStoreFilter === 'All' ? 'active-chip' : ''}`;
     allChip.innerText = '🌟 Sabhi Dukanen (All)';
@@ -326,7 +325,6 @@ function loadStoreFilterBar() {
     };
     bar.appendChild(allChip);
 
-    // Get all registered shopkeepers
     let shopkeepers = registeredUsers.filter(u => u.role === 'shopkeeper' && u.shopName);
     
     shopkeepers.forEach(shop => {
@@ -349,14 +347,12 @@ function loadCustomerProducts() {
 
     let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
 
-    // Filter by distance (2 km radius)
     let filteredProducts = liveProducts.filter(p => {
         let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
         p.distanceText = dist.toFixed(1) + " km";
         return dist <= 2.0;
     });
 
-    // Filter by selected shop tab/chip
     if(selectedStoreFilter !== 'All') {
         filteredProducts = filteredProducts.filter(p => p.shop === selectedStoreFilter);
     }
@@ -605,7 +601,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
     }
 }
 
@@ -977,6 +973,7 @@ function updateShopSoldItemsUI() {
     });
 }
 
+// 🖨️ FULL DETAILS SOLD REPORT PDF / PRINT FIX
 function downloadSoldItemsPDF() {
     let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
     let mySoldItems = soldItemsHistory.filter(s => s.shopName === postalName);
@@ -994,7 +991,7 @@ function downloadSoldItemsPDF() {
         <html>
         <head>
             <meta charset="UTF-8">
-            <title>${postalName} - Real-Time Sold Report</title>
+            <title>${postalName} - Sold Items Report</title>
             <style>
                 body { font-family: Arial, sans-serif; padding: 20px; color: #222; background: #fff; }
                 h2 { color: #0b3c65; text-align: center; border-bottom: 2px solid #0b3c65; padding-bottom: 8px; margin-bottom: 15px; }
@@ -1006,7 +1003,7 @@ function downloadSoldItemsPDF() {
                 .total-box p { margin: 5px 0; font-size: 16px; font-weight: bold; color: #166534; }
                 @media print {
                     body { padding: 0; }
-                    button { display: none; }
+                    .no-print { display: none; }
                 }
             </style>
         </head>
@@ -1020,9 +1017,10 @@ function downloadSoldItemsPDF() {
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Item Name & Customer</th>
+                        <th>Item Name</th>
+                        <th>Customer Details</th>
                         <th>Date & Time</th>
-                        <th>MRP (Per Unit)</th>
+                        <th>MRP</th>
                         <th>Qty</th>
                         <th>Total Amount</th>
                     </tr>
@@ -1034,8 +1032,9 @@ function downloadSoldItemsPDF() {
         htmlContent += `
             <tr>
                 <td>${index + 1}</td>
-                <td><strong>${sold.itemName}</strong><br><small style="color:#64748b;">Customer: ${sold.customerName} (${sold.customerAddress || 'N/A'})</small></td>
-                <td>${sold.date} <br> ${sold.time}</td>
+                <td><strong>${sold.itemName}</strong></td>
+                <td>${sold.customerName}<br><small style="color:#64748b;">${sold.customerAddress || 'N/A'}</small></td>
+                <td>${sold.date}<br>${sold.time}</td>
                 <td>₹${sold.itemPrice}</td>
                 <td>${sold.quantity}</td>
                 <td><strong>₹${sold.totalPrice}</strong></td>
@@ -1048,42 +1047,52 @@ function downloadSoldItemsPDF() {
             </table>
             <div class="total-box">
                 <p>Total Items Sold Quantity: ${grandTotalQty} Units</p>
-                <p style="font-size: 18px; color: #0b3c65;">Grand Total Real-Time Revenue: ₹${grandTotalAmount}</p>
+                <p style="font-size: 18px; color: #0b3c65;">Grand Total Revenue: ₹${grandTotalAmount}</p>
             </div>
-            <div style="text-align: center; margin-top: 30px;">
-                <button onclick="window.print()" style="background: #2563eb; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">🖨️ Print / Save as PDF</button>
+            <div class="no-print" style="text-align: center; margin-top: 30px;">
+                <button onclick="window.print()" style="background: #2563eb; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">🖨️ Print / Save as PDF</button>
             </div>
         </body>
         </html>
     `;
 
-    let blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-    let blobUrl = URL.createObjectURL(blob);
+    // Universal Iframe Print Method (Works across Mobile and Desktop Browsers smoothly)
+    let oldFrame = document.getElementById('print-iframe');
+    if (oldFrame) oldFrame.remove();
 
-    let printWindow = window.open(blobUrl, '_blank');
-    
-    if (!printWindow || printWindow.closed || typeof printWindow.closed === 'undefined') {
-        let iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = blobUrl;
-        document.body.appendChild(iframe);
-        
-        setTimeout(() => {
-            try {
-                iframe.contentWindow.focus();
-                iframe.contentWindow.print();
-            } catch (e) {
+    let iframe = document.createElement('iframe');
+    iframe.id = 'print-iframe';
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    let doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(htmlContent);
+    doc.close();
+
+    setTimeout(() => {
+        try {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        } catch (err) {
+            // Fallback to Blob Window
+            let blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            let blobUrl = URL.createObjectURL(blob);
+            let win = window.open(blobUrl, '_blank');
+            if(win) {
+                win.onload = function() {
+                    win.print();
+                };
+            } else {
                 alert("⚠️ Pop-up blocked! Kripya browser settings mein pop-ups allow karein.");
             }
-        }, 500);
-    } else {
-        printWindow.onload = function() {
-            setTimeout(() => {
-                printWindow.focus();
-                printWindow.print();
-            }, 500);
-        };
-    }
+        }
+    }, 500);
 }
 
 function openTrackOrderModal() {
