@@ -31,21 +31,34 @@ window.addEventListener('DOMContentLoaded', () => {
     updateCartSummary();
 
     let isLoggedIn = localStorage.getItem('sm_isLoggedIn');
+    
+    // Sabhi screens ko pehle hide karte hain
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
     if(isLoggedIn === 'true') {
-        document.getElementById('screen-welcome').classList.remove('active');
         if(currentRole === 'customer') {
-            document.getElementById('screen-customer-home').classList.add('active');
-            loadStoreFilterBar();
-            loadCustomerProducts();
+            let custHomeScreen = document.getElementById('screen-customer-home');
+            if(custHomeScreen) {
+                custHomeScreen.classList.add('active');
+                loadStoreFilterBar();
+                loadCustomerProducts();
+            }
         } else {
-            document.getElementById('shop-name-display').innerText = postalName;
-            document.getElementById('screen-shop-dashboard').classList.add('active');
-            updateShopLiveItemsUI();
-            updateShopReceivedOrdersUI();
-            updateShopSoldItemsUI();
-            injectGalleryButtonIntoShopUI();
-            injectUpiSettingsIntoProfileDrawer();
+            let shopDashboard = document.getElementById('screen-shop-dashboard');
+            if(shopDashboard) {
+                shopDashboard.classList.add('active');
+                let shopNameDisplay = document.getElementById('shop-name-display');
+                if(shopNameDisplay) shopNameDisplay.innerText = postalName;
+                updateShopLiveItemsUI();
+                updateShopReceivedOrdersUI();
+                updateShopSoldItemsUI();
+                injectGalleryButtonIntoShopUI();
+                injectUpiSettingsIntoProfileDrawer();
+            }
         }
+    } else {
+        let welcomeScreen = document.getElementById('screen-welcome');
+        if(welcomeScreen) welcomeScreen.classList.add('active');
     }
 });
 
@@ -162,7 +175,7 @@ function showLoginScreen() {
     document.getElementById('screen-mode-choice').classList.remove('active');
     document.getElementById('screen-registration').classList.remove('active');
     document.getElementById('screen-login').classList.add('active');
-    document.getElementById('login-heading').innerText = (currentRole === 'customer') ? "Customer Login" : "Dukandaar Login";
+    document.getElementById('login-heading').innerText = (currentRole === 'customer') ? "Customer Login" : "Dukandaار Login";
 }
 
 function showRegistrationScreen() {
@@ -244,6 +257,9 @@ function verifyAndCompleteRegistration() {
         registeredUsers.push(newUser);
         localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
         localStorage.setItem('sm_isLoggedIn', 'true');
+        localStorage.setItem('sm_currentRole', currentRole);
+        localStorage.setItem('sm_postalName', postalName);
+        localStorage.setItem('sm_userName', loggedInUserName);
 
         alert("🎉 Registration Safal Raha!");
         document.getElementById('screen-registration').classList.remove('active');
@@ -601,7 +617,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
     }
 }
 
