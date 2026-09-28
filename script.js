@@ -408,7 +408,7 @@ function updateCartSummary() {
     if(totalEl) totalEl.innerText = totalAmount;
 }
 
-// Jab customer "Order Place Karein" button dabaye tab checkout screen khulegi
+// Jab customer "Order Place Karein" button dabaye tabhi checkout screen khulegi
 function openCheckoutScreen() {
     let itemsArr = Object.values(cart);
     if(itemsArr.length === 0) {
@@ -595,7 +595,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
     }
 }
 
