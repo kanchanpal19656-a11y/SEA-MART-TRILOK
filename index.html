@@ -169,7 +169,7 @@
         <!-- Customer Product Grid -->
         <div id="customer-product-grid" class="customer-product-grid"></div>
 
-        <!-- UNIFIED BOTTOM CONTAINER (Cart Footer + App Toolbar Stacked Cleanly) -->
+        <!-- PROFESSIONAL UNIFIED BOTTOM CONTAINER (Absolute Bottom Fixed) -->
         <div class="customer-bottom-container">
             <!-- Floating Cart / Order Place Bar -->
             <div class="floating-cart-footer">
@@ -177,19 +177,19 @@
                     <span>Total Items: <span id="cart-count">0</span></span>
                     <span>Total: ₹<span id="cart-total">0</span></span>
                 </div>
-                <button onclick="openCheckoutScreen()" style="width: 100%; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 6px; font-size: 0.95rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <button onclick="openCheckoutScreen()" style="width: 100%; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; font-size: 0.95rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(11, 60, 101, 0.2);">
                     🛍️ Order Place Karein
                 </button>
             </div>
 
-            <!-- App Bottom Toolbar -->
+            <!-- Professional App Bottom Toolbar -->
             <div class="app-bottom-toolbar">
                 <button class="toolbar-btn active" onclick="backToCustomerHome()">
-                    <span class="icon">🏠</span>
+                    <span class="icon"><i class="fas fa-home"></i></span>
                     Home
                 </button>
                 <button class="toolbar-btn" onclick="openTrackOrderModal()">
-                    <span class="icon">📦</span>
+                    <span class="icon"><i class="fas fa-box-open"></i></span>
                     Track Order
                 </button>
             </div>
