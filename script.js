@@ -39,7 +39,7 @@ window.addEventListener('DOMContentLoaded', () => {
             updateShopReceivedOrdersUI();
             updateShopSoldItemsUI();
             injectGalleryButtonIntoShopUI();
-            loadShopUpiSettings();
+            injectUpiSettingsIntoProfileDrawer();
         }
     }
 });
@@ -99,6 +99,9 @@ function toggleProfileDrawer(open, role = 'customer') {
         document.getElementById('drawer-user-name').innerText = loggedInUserName;
         document.getElementById('drawer-user-role').innerText = (role === 'shopkeeper' ? 'Dukandaar (Seller)' : 'Customer');
         drawer.classList.add('open');
+        if(currentRole === 'shopkeeper') {
+            injectUpiSettingsIntoProfileDrawer();
+        }
     } else {
         drawer.classList.remove('open');
     }
@@ -248,7 +251,7 @@ function verifyAndCompleteRegistration() {
             updateShopReceivedOrdersUI();
             updateShopSoldItemsUI();
             injectGalleryButtonIntoShopUI();
-            loadShopUpiSettings();
+            injectUpiSettingsIntoProfileDrawer();
         }
     });
 }
@@ -296,7 +299,7 @@ function executeLogin() {
             updateShopReceivedOrdersUI();
             updateShopSoldItemsUI();
             injectGalleryButtonIntoShopUI();
-            loadShopUpiSettings();
+            injectUpiSettingsIntoProfileDrawer();
         }
     });
 }
@@ -411,7 +414,6 @@ function updateCartSummary() {
     if(totalEl) totalEl.innerText = totalAmount;
 }
 
-// Naya screen: Jab customer cart ya order items par click karega
 function openCheckoutScreen() {
     let itemsArr = Object.values(cart);
     if(itemsArr.length === 0) {
@@ -419,9 +421,9 @@ function openCheckoutScreen() {
         return;
     }
 
-    document.getElementById('screen-customer-home').classList.remove('active');
+    let screenCustomerHome = document.getElementById('screen-customer-home');
+    if(screenCustomerHome) screenCustomerHome.classList.remove('active');
     
-    // Agar checkout screen HTML mein nahi hai toh dynamically create ya activate karenge
     let checkoutScreen = document.getElementById('screen-checkout');
     if(!checkoutScreen) {
         checkoutScreen = document.createElement('div');
@@ -440,7 +442,6 @@ function renderCheckoutContent() {
     let totalAmount = itemsArr.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     let shopName = itemsArr.length > 0 ? itemsArr[0].shop : "";
 
-    // Dukandaar ki UPI ID find karna registeredUsers se
     let shopOwner = registeredUsers.find(u => u.shopName === shopName && u.role === 'shopkeeper');
     let upiId = shopOwner && shopOwner.upiId ? shopOwner.upiId : "merchant@upi";
 
@@ -466,12 +467,12 @@ function renderCheckoutContent() {
             </div>
 
             <div style="margin-bottom: 15px;">
-                <label style="font-size: 0.85rem; font-weight: block; display: block; margin-bottom: 4px;">Mobile Number:</label>
+                <label style="font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 4px;">Mobile Number:</label>
                 <input type="text" id="checkout-cust-phone" value="${loggedInUserPhone}" maxlength="10" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;">
             </div>
 
             <div style="margin-bottom: 15px;">
-                <label style="font-size: 0.85rem; font-weight: block; display: block; margin-bottom: 4px;">Delivery Address:</label>
+                <label style="font-size: 0.85rem; font-weight: bold; display: block; margin-bottom: 4px;">Delivery Address:</label>
                 <textarea id="checkout-cust-address" placeholder="Apna pura pata yahan likhein..." style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; height: 60px;"></textarea>
             </div>
 
@@ -497,7 +498,7 @@ function renderCheckoutContent() {
                 <p style="font-size: 0.75rem; color: #64748b; margin-top: 6px;">UPI ID: ${upiId}</p>
             </div>
 
-            <button onclick="placeOrderFromCheckout()" style="width: 100%; background: var(--success, #166534); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer;">🛍️ Confirm & Place Order</button>
+            <button onclick="placeOrderFromCheckout()" style="width: 100%; background: #166534; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer;">🛍️ Confirm & Place Order</button>
         </div>
     `;
 }
@@ -512,8 +513,10 @@ function setPaymentMethod(method, amount, upiId) {
 }
 
 function backToCustomerHomeFromCheckout() {
-    document.getElementById('screen-checkout').classList.remove('active');
-    document.getElementById('screen-customer-home').classList.add('active');
+    let checkoutScr = document.getElementById('screen-checkout');
+    if(checkoutScr) checkoutScr.classList.remove('active');
+    let custHome = document.getElementById('screen-customer-home');
+    if(custHome) custHome.classList.add('active');
     loadStoreFilterBar();
     loadCustomerProducts();
 }
@@ -563,8 +566,10 @@ function placeOrderFromCheckout() {
     updateCartSummary();
 
     startShopkeeperAlarm();
-    document.getElementById('screen-checkout').classList.remove('active');
-    document.getElementById('screen-customer-home').classList.add('active');
+    let checkoutScr = document.getElementById('screen-checkout');
+    if(checkoutScr) checkoutScr.classList.remove('active');
+    let custHome = document.getElementById('screen-customer-home');
+    if(custHome) custHome.classList.add('active');
     loadStoreFilterBar();
     loadCustomerProducts();
 }
@@ -595,7 +600,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
     }
 }
 
@@ -623,7 +628,7 @@ function captureShopWebcamPhoto() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     capturedWebcamDataUrl = canvas.toDataURL('image/png');
-    document.getElementById('shop-captured-preview').innerHTML = `<img src="${capturedWebcamDataUrl}" style="width: 70px; height: 70px; border-radius: 6px; object-fit: cover; border: 1px solid #cbd5e1;"> <span style="font-size:0.75rem; color:var(--success); font-weight:bold;">Live Photo Captured ✅</span>`;
+    document.getElementById('shop-captured-preview').innerHTML = `<img src="${capturedWebcamDataUrl}" style="width: 70px; height: 70px; border-radius: 6px; object-fit: cover; border: 1px solid #cbd5e1;"> <span style="font-size:0.75rem; color:#166534; font-weight:bold;">Live Photo Captured ✅</span>`;
 
     if(shopCameraStream) {
         shopCameraStream.getTracks().forEach(track => track.stop());
@@ -646,27 +651,38 @@ function injectGalleryButtonIntoShopUI() {
         </button>
     `;
     previewBox.parentNode.insertBefore(containerDiv, previewBox);
+}
 
-    // Dukandaar ke liye UPI ID configure karne ka section add karna dashboard mein
-    let dash = document.getElementById('screen-shop-dashboard');
-    if(dash && !document.getElementById('shop-upi-setting-box')) {
-        let upiBox = document.createElement('div');
-        upiBox.id = 'shop-upi-setting-box';
-        upiBox.style.cssText = "background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; margin: 10px 0;";
-        upiBox.innerHTML = `
-            <h4 style="font-size: 0.9rem; color: #0b3c65; margin-bottom: 6px;">💳 Dukandaar UPI Settings (For Online QR)</h4>
-            <div style="display: flex; gap: 6px;">
-                <input type="text" id="shop-upi-input" placeholder="e.g. merchant@paytm" style="flex:1; padding: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 4px;">
-                <button onclick="saveShopUpiId()" style="background: #2563eb; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; cursor: pointer;">Save UPI</button>
-            </div>
-        `;
-        dash.insertBefore(upiBox, dash.firstChild);
+// Dukandaar ki UPI Settings ko Profile Drawer ke andar add karne ka function
+function injectUpiSettingsIntoProfileDrawer() {
+    let drawer = document.getElementById('profile-drawer');
+    if(!drawer) return;
+
+    if(document.getElementById('profile-drawer-upi-box')) {
         loadShopUpiSettings();
+        return;
     }
+
+    let upiBox = document.createElement('div');
+    upiBox.id = 'profile-drawer-upi-box';
+    upiBox.style.cssText = "margin-top: 20px; padding: 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;";
+    
+    upiBox.innerHTML = `
+        <h4 style="font-size: 0.9rem; color: #0b3c65; margin-bottom: 6px;">💳 Dukandaar UPI Settings</h4>
+        <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 8px;">Online QR code generation ke liye apni UPI ID yahan daalein:</p>
+        <div style="display: flex; gap: 6px;">
+            <input type="text" id="drawer-shop-upi-input" placeholder="e.g. merchant@paytm" style="flex:1; padding: 6px; font-size: 0.85rem; border: 1px solid #cbd5e1; border-radius: 4px;">
+            <button onclick="saveShopUpiIdFromDrawer()" style="background: #2563eb; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; cursor: pointer;">Save</button>
+        </div>
+    `;
+
+    // Drawer ke andar content area mein append kar dena
+    drawer.appendChild(upiBox);
+    loadShopUpiSettings();
 }
 
 function loadShopUpiSettings() {
-    let input = document.getElementById('shop-upi-input');
+    let input = document.getElementById('drawer-shop-upi-input');
     if(!input) return;
     let shopOwner = registeredUsers.find(u => u.shopName === postalName && u.role === 'shopkeeper');
     if(shopOwner && shopOwner.upiId) {
@@ -674,8 +690,8 @@ function loadShopUpiSettings() {
     }
 }
 
-function saveShopUpiId() {
-    let input = document.getElementById('shop-upi-input');
+function saveShopUpiIdFromDrawer() {
+    let input = document.getElementById('drawer-shop-upi-input');
     if(!input) return;
     let upiVal = input.value.trim();
     if(!upiVal) {
@@ -687,7 +703,7 @@ function saveShopUpiId() {
     if(shopOwner) {
         shopOwner.upiId = upiVal;
         localStorage.setItem('sm_registeredUsers', JSON.stringify(registeredUsers));
-        alert("✅ UPI ID successfully save ho gayi hai!");
+        alert("✅ UPI ID profile ke andar successfully save ho gayi hai!");
     }
 }
 
@@ -699,7 +715,7 @@ function handleShopUploadedImage(event) {
             capturedWebcamDataUrl = e.target.result;
             document.getElementById('shop-captured-preview').innerHTML = `
                 <img src="${capturedWebcamDataUrl}" style="width: 70px; height: 70px; border-radius: 6px; object-fit: cover; border: 1px solid #cbd5e1;"> 
-                <span style="font-size:0.75rem; color:var(--success); font-weight:bold;">Gallery Pic Attached ✅</span>
+                <span style="font-size:0.75rem; color:#166534; font-weight:bold;">Gallery Pic Attached ✅</span>
             `;
         };
         reader.readAsDataURL(file);
@@ -800,25 +816,25 @@ function updateShopReceivedOrdersUI() {
         
         let actionContent = '';
         if(ord.isCancelled) {
-            actionContent = `<p style="margin-top: 6px; color: var(--error); font-weight: bold;">Status: Order Cancelled ❌</p>`;
+            actionContent = `<p style="margin-top: 6px; color: #ef4444; font-weight: bold;">Status: Order Cancelled ❌</p>`;
         } else if(ord.isDelivered) {
-            actionContent = `<p style="margin-top: 6px; color: var(--success); font-weight: bold;">Status: Successfully Delivered ✅</p>`;
+            actionContent = `<p style="margin-top: 6px; color: #166534; font-weight: bold;">Status: Successfully Delivered ✅</p>`;
         } else {
             actionContent = `
-                <p style="margin-top: 4px;"><strong>Status:</strong> <span style="color:var(--error);">${ord.status}</span></p>
+                <p style="margin-top: 4px;"><strong>Status:</strong> <span style="color:#ef4444;">${ord.status}</span></p>
                 <div style="margin-top: 8px; background: #f1f5f9; padding: 8px; border-radius: 6px;">
                     <label style="font-size: 0.78rem; font-weight: bold; color: #0b3c65;">Customer se Delivery OTP lein:</label>
                     <div style="display: flex; gap: 6px; margin-top: 4px;">
                         <input type="text" id="shop-otp-input-${ord.id}" maxlength="4" placeholder="4-digit OTP" style="padding: 6px; font-size: 0.85rem;">
-                        <button onclick="verifyDeliveryOtp('${ord.id}')" style="padding: 6px 10px; margin-top:0; font-size: 0.8rem; background: var(--success); width: auto;">Confirm Delivered</button>
+                        <button onclick="verifyDeliveryOtp('${ord.id}')" style="padding: 6px 10px; margin-top:0; font-size: 0.8rem; background: #166534; width: auto; color: white;">Confirm Delivered</button>
                     </div>
                 </div>
                 ${ord.cancelOtp ? `
-                <div style="margin-top: 8px; background: #fef2f2; border: 1px dashed var(--error); padding: 8px; border-radius: 6px;">
+                <div style="margin-top: 8px; background: #fef2f2; border: 1px dashed #ef4444; padding: 8px; border-radius: 6px;">
                     <label style="font-size: 0.78rem; font-weight: bold; color: #b91c1c;">Customer Cancellation OTP:</label>
                     <div style="display: flex; gap: 6px; margin-top: 4px;">
                         <input type="text" id="shop-cancel-otp-input-${ord.id}" maxlength="4" placeholder="Cancel OTP" style="padding: 6px; font-size: 0.85rem;">
-                        <button onclick="verifyCancelOtp('${ord.id}')" style="padding: 6px 10px; margin-top:0; font-size: 0.8rem; background: var(--error); width: auto; color: white;">Confirm Cancel</button>
+                        <button onclick="verifyCancelOtp('${ord.id}')" style="padding: 6px 10px; margin-top:0; font-size: 0.8rem; background: #ef4444; width: auto; color: white;">Confirm Cancel</button>
                     </div>
                 </div>
                 ` : `<p style="margin-top: 6px; font-size: 0.75rem; color: #64748b;">Customer dwara cancel request kiye jaane par yahan Cancel OTP dikhega.</p>`}
@@ -939,7 +955,7 @@ function updateShopSoldItemsUI() {
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
                 <strong style="font-size: 0.9rem; color: #0b3c65;">#${index + 1} - ${sold.itemName}</strong>
-                <span style="font-size: 0.85rem; font-weight: bold; color: var(--success);">₹${sold.totalPrice}</span>
+                <span style="font-size: 0.85rem; font-weight: bold; color: #166534;">₹${sold.totalPrice}</span>
             </div>
             <div style="font-size: 0.78rem; color: #555; display: flex; flex-direction: column; gap: 2px;">
                 <p><strong>Quantity:</strong> ${sold.quantity} Unit</p>
@@ -1062,8 +1078,10 @@ function downloadShopReportPDF() {
 }
 
 function openTrackOrderModal() {
-    document.getElementById('screen-customer-home').classList.remove('active');
-    document.getElementById('screen-track-order').classList.add('active');
+    let screenCustHome = document.getElementById('screen-customer-home');
+    if(screenCustHome) screenCustHome.classList.remove('active');
+    let screenTrack = document.getElementById('screen-track-order');
+    if(screenTrack) screenTrack.classList.add('active');
 
     let listContainer = document.getElementById('track-order-list');
     listContainer.innerHTML = '';
@@ -1075,16 +1093,16 @@ function openTrackOrderModal() {
     }
 
     allOrders.forEach(ord => {
-        let statusColor = ord.isDelivered ? 'var(--success)' : (ord.isCancelled ? 'var(--error)' : 'var(--accent)');
+        let statusColor = ord.isDelivered ? '#166534' : (ord.isCancelled ? '#ef4444' : '#b45309');
         
         let cancelSection = '';
         if(!ord.isDelivered && !ord.isCancelled) {
             cancelSection = `
                 <div style="margin-top: 8px; text-align: right;">
                     ${ord.cancelOtp ? `
-                        <p style="font-size: 0.75rem; color: var(--error); font-weight: bold;">Cancel OTP Generated: ${ord.cancelOtp}</p>
+                        <p style="font-size: 0.75rem; color: #ef4444; font-weight: bold;">Cancel OTP Generated: ${ord.cancelOtp}</p>
                     ` : `
-                        <button onclick="requestCustomerOrderCancellation('${ord.id}')" style="background: var(--error); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer;">❌ Cancel Order</button>
+                        <button onclick="requestCustomerOrderCancellation('${ord.id}')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer;">❌ Cancel Order</button>
                     `}
                 </div>
             `;
@@ -1100,7 +1118,7 @@ function openTrackOrderModal() {
             <p style="font-size: 0.8rem; color: #555;">Dukan: ${ord.shopName}</p>
             <p style="font-size: 0.8rem; color: #555;">Items: ${ord.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}</p>
             ${!ord.isDelivered && !ord.isCancelled ? `
-            <div style="background: #fffbeb; border: 1px dashed var(--accent); padding: 6px; border-radius: 4px; margin-top: 6px; text-align: center;">
+            <div style="background: #fffbeb; border: 1px dashed #b45309; padding: 6px; border-radius: 4px; margin-top: 6px; text-align: center;">
                 <span style="font-size: 0.75rem; color: #b45309; font-weight: bold;">🔑 Secret Delivery OTP:</span><br>
                 <span style="font-size: 1.2rem; font-weight: bold; color: #b45309; letter-spacing: 2px;">${ord.deliveryOtp}</span>
             </div>
@@ -1118,7 +1136,8 @@ function backToCustomerHome() {
     if(trackScreen) trackScreen.classList.remove('active');
     if(checkoutScreen) checkoutScreen.classList.remove('active');
     
-    document.getElementById('screen-customer-home').classList.add('active');
+    let custHome = document.getElementById('screen-customer-home');
+    if(custHome) custHome.classList.add('active');
     loadStoreFilterBar();
     loadCustomerProducts();
 }
