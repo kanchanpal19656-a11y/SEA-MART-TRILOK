@@ -135,7 +135,7 @@ function openModeSelection(role) {
     localStorage.setItem('sm_currentRole', role);
     document.getElementById('screen-role-selection').classList.remove('active');
     document.getElementById('screen-mode-choice').classList.add('active');
-    document.getElementById('mode-title').innerText = (role === 'customer') ? "Customer Options" : "Dukandaar Options";
+    document.getElementById('mode-title').innerText = (role === 'customer') ? "Customer Options" : "Dukandaار Options";
 }
 
 function backToRoleSelection() {
@@ -444,7 +444,9 @@ function placeOrder() {
         totalAmount: totalAmt,
         status: "Pending (Pack ho raha hai)",
         isDelivered: false,
+        isCancelled: false,
         deliveryOtp: deliveryOtp,
+        cancelOtp: "",
         shopName: itemsArr[0].shop
     };
 
@@ -489,7 +491,7 @@ function stopAlertBeep() {
     if(alertInterval) {
         clearInterval(alertInterval);
         alertInterval = null;
-        alert("🔇 Dukandaar alarm band kar diya gaya hai.");
+        alert("🔇 Dukandaار alarm band kar diya gaya hai.");
     }
 }
 
@@ -613,7 +615,7 @@ function updateShopLiveItemsUI() {
 }
 
 function deleteShopProduct(productId) {
-    if(!confirm("Kya aap sach mein is live item ko delete karna chahte hain?")) {
+    if(!confirm("Kya aap sach mein is live item को delete karna chahte hain?")) {
         return;
     }
 
@@ -650,7 +652,9 @@ function updateShopReceivedOrdersUI() {
         div.className = 'order-card-item';
         
         let actionContent = '';
-        if(ord.isDelivered) {
+        if(ord.isCancelled) {
+            actionContent = `<p style="margin-top: 6px; color: var(--error); font-weight: bold;">Status: Order Cancelled ❌</p>`;
+        } else if(ord.isDelivered) {
             actionContent = `<p style="margin-top: 6px; color: var(--success); font-weight: bold;">Status: Successfully Delivered ✅</p>`;
         } else {
             actionContent = `
@@ -662,6 +666,15 @@ function updateShopReceivedOrdersUI() {
                         <button onclick="verifyDeliveryOtp('${ord.id}')" style="padding: 6px 10px; margin-top:0; font-size: 0.8rem; background: var(--success); width: auto;">Confirm Delivered</button>
                     </div>
                 </div>
+                ${ord.cancelOtp ? `
+                <div style="margin-top: 8px; background: #fef2f2; border: 1px dashed var(--error); padding: 8px; border-radius: 6px;">
+                    <label style="font-size: 0.78rem; font-weight: bold; color: #b91c1c;">Customer Cancellation OTP:</label>
+                    <div style="display: flex; gap: 6px; margin-top: 4px;">
+                        <input type="text" id="shop-cancel-otp-input-${ord.id}" maxlength="4" placeholder="Cancel OTP" style="padding: 6px; font-size: 0.85rem;">
+                        <button onclick="verifyCancelOtp('${ord.id}')" style="padding: 6px 10px; margin-top:0; font-size: 0.8rem; background: var(--error); width: auto; color: white;">Confirm Cancel</button>
+                    </div>
+                </div>
+                ` : `<p style="margin-top: 6px; font-size: 0.75rem; color: #64748b;">Customer dwara cancel request kiye jaane par yahan Cancel OTP dikhega.</p>`}
             `;
         }
 
@@ -719,6 +732,53 @@ function verifyDeliveryOtp(orderId) {
     }
 }
 
+// ==========================================
+// NEW: Customer Cancel Order Request Logic
+// ==========================================
+function requestCustomerOrderCancellation(orderId) {
+    let allOrders = JSON.parse(localStorage.getItem('sm_allOrders')) || [];
+    let ord = allOrders.find(o => o.id === orderId);
+    if(!ord) return;
+
+    if(ord.isDelivered) {
+        alert("⚠️ Jo order deliver ho chuka hai, use cancel nahi kiya ja sakta!");
+        return;
+    }
+
+    if(!ord.cancelOtp) {
+        ord.cancelOtp = Math.floor(1000 + Math.random() * 9000).toString();
+        ord.status = "Cancel Requested (OTP Generate Ho Gaya)";
+        localStorage.setItem('sm_allOrders', JSON.stringify(allOrders));
+    }
+
+    alert(`⚠️ Cancellation OTP generate ho gaya hai: ${ord.cancelOtp}\nKripya yeh OTP apne dukandaar ko bataiye taaki order cancel ho sake.`);
+    openTrackOrderModal();
+}
+
+// ==========================================
+// NEW: Shopkeeper Verify Cancel OTP Logic
+// ==========================================
+function verifyCancelOtp(orderId) {
+    let inputField = document.getElementById(`shop-cancel-otp-input-${orderId}`);
+    let enteredOtp = inputField ? inputField.value.trim() : '';
+
+    let allOrders = JSON.parse(localStorage.getItem('sm_allOrders')) || [];
+    let ord = allOrders.find(o => o.id === orderId);
+
+    if(ord) {
+        if(enteredOtp === ord.cancelOtp) {
+            ord.isCancelled = true;
+            ord.status = "Cancelled ❌";
+            localStorage.setItem('sm_allOrders', JSON.stringify(allOrders));
+
+            alert("✅ Sahi OTP! Order successfully cancel kar diya gaya hai.");
+            updateShopReceivedOrdersUI();
+        } else {
+            alert("❌ Galat Cancel OTP!");
+        }
+    }
+}
+
 function updateShopSoldItemsUI() {
     let box = document.getElementById('shop-sold-items-box');
     if(!box) return;
@@ -752,7 +812,7 @@ function updateShopSoldItemsUI() {
 }
 
 // ==========================================
-// NEW: Universal Cross-Platform PDF Download
+// FIXED: Universal Cross-Platform PDF Download
 // ==========================================
 function downloadShopReportPDF() {
     let soldItemsHistory = JSON.parse(localStorage.getItem('sm_soldHistory')) || [];
@@ -850,7 +910,7 @@ function downloadShopReportPDF() {
                 iframe.contentWindow.focus();
                 iframe.contentWindow.print();
             } catch (e) {
-                alert("⚠️ Pop-up blocked! Kripya browser settings mein pop-ups allow karein ya diye gaye URL ko open karein.");
+                alert("⚠️ Pop-up blocked! Kripya browser settings mein pop-ups allow karein.");
             }
         }, 500);
     } else {
@@ -862,7 +922,6 @@ function downloadShopReportPDF() {
         };
     }
 }
-// ==========================================
 
 function openTrackOrderModal() {
     document.getElementById('screen-customer-home').classList.remove('active');
@@ -878,7 +937,21 @@ function openTrackOrderModal() {
     }
 
     allOrders.forEach(ord => {
-        let statusColor = ord.isDelivered ? 'var(--success)' : 'var(--error)';
+        let statusColor = ord.isDelivered ? 'var(--success)' : (ord.isCancelled ? 'var(--error)' : 'var(--accent)');
+        
+        let cancelSection = '';
+        if(!ord.isDelivered && !ord.isCancelled) {
+            cancelSection = `
+                <div style="margin-top: 8px; text-align: right;">
+                    ${ord.cancelOtp ? `
+                        <p style="font-size: 0.75rem; color: var(--error); font-weight: bold;">Cancel OTP Generated: ${ord.cancelOtp}</p>
+                    ` : `
+                        <button onclick="requestCustomerOrderCancellation('${ord.id}')" style="background: var(--error); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer;">❌ Cancel Order</button>
+                    `}
+                </div>
+            `;
+        }
+
         let itemDiv = document.createElement('div');
         itemDiv.style.background = '#fff';
         itemDiv.style.padding = '10px';
@@ -888,11 +961,14 @@ function openTrackOrderModal() {
             <p style="font-size: 0.85rem; font-weight: bold;">Order ID: ${ord.id}</p>
             <p style="font-size: 0.8rem; color: #555;">Dukan: ${ord.shopName}</p>
             <p style="font-size: 0.8rem; color: #555;">Items: ${ord.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}</p>
+            ${!ord.isDelivered && !ord.isCancelled ? `
             <div style="background: #fffbeb; border: 1px dashed var(--accent); padding: 6px; border-radius: 4px; margin-top: 6px; text-align: center;">
                 <span style="font-size: 0.75rem; color: #b45309; font-weight: bold;">🔑 Secret Delivery OTP:</span><br>
                 <span style="font-size: 1.2rem; font-weight: bold; color: #b45309; letter-spacing: 2px;">${ord.deliveryOtp}</span>
             </div>
+            ` : ''}
             <p style="font-size: 0.8rem; color: ${statusColor}; font-weight: bold; margin-top: 6px;">Status: ${ord.status}</p>
+            ${cancelSection}
         `;
         listContainer.appendChild(itemDiv);
     });
