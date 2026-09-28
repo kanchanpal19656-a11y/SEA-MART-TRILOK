@@ -48,24 +48,36 @@ body {
 }
 .screen.active { display: flex !important; }
 
-/* Customer Home Screen padding taaki content niche chup na ho */
+/* Customer Home Screen padding taaki niche content chup na ho */
 #screen-customer-home {
-    padding-bottom: 130px; 
+    padding-bottom: 145px; 
 }
 
-/* Fixed Bottom App Toolbar (Real App Jaisa Niche Bar) */
-.app-bottom-toolbar {
+/* Single Unified Bottom Container for Cart & Toolbar (No Overlap) */
+.customer-bottom-container {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
+    z-index: 1000;
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
+}
+
+/* Floating Cart & Order Place Box */
+.floating-cart-footer {
     background: #ffffff;
+    padding: 10px 16px;
     border-top: 1px solid #cbd5e1;
+    box-sizing: border-box;
+}
+
+/* App Bottom Toolbar (Niche Navigation Bar) */
+.app-bottom-toolbar {
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-around;
     padding: 8px 0;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
-    z-index: 1000;
     box-sizing: border-box;
 }
 
@@ -89,20 +101,6 @@ body {
 .toolbar-btn span.icon {
     font-size: 1.2rem;
     margin-bottom: 2px;
-}
-
-/* Floating Cart & Order Place Box (Toolbar ke theek upar) */
-.floating-cart-footer {
-    position: fixed;
-    bottom: 55px; 
-    left: 0;
-    width: 100%;
-    background: #ffffff;
-    padding: 10px 16px;
-    border-top: 1px solid #e2e8f0;
-    box-sizing: border-box;
-    z-index: 999;
-    box-shadow: 0 -2px 5px rgba(0,0,0,0.03);
 }
 
 /* Fixed Dynamic Checkout Screen Styling */
