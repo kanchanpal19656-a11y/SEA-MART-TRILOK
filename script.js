@@ -1,5 +1,5 @@
 let currentRole = localStorage.getItem('sm_currentRole') || 'customer';
-let postalName = localStorage.getItem('sm_postalName') || "";
+let postalName = localStorage.getItem('sm_postalName') || "Rajan Manufacturing Pvt Ltd";
 let loggedInUserName = localStorage.getItem('sm_userName') || "Rajan Pal";
 let loggedInUserPhone = localStorage.getItem('sm_userPhone') || "";
 let loggedInUserEmail = localStorage.getItem('sm_userEmail') || "";
@@ -283,7 +283,6 @@ function executeLogin() {
 
     let foundUser = registeredUsers.find(u => (u.phone === loginId || u.email === loginId) && u.password === loginPass && u.role === currentRole);
     
-    // Default Owner quick login fallback if no user registered yet
     if(!foundUser && currentRole === 'shopkeeper' && (loginId === '9999999999' || loginId === 'rajan@gmail.com')) {
         foundUser = {
             name: "Rajan Pal",
@@ -357,7 +356,7 @@ function loadStoreFilterBar() {
 
     let shopkeepers = registeredUsers.filter(u => u.role === 'shopkeeper' && u.shopName);
     if(shopkeepers.length === 0) {
-        shopkeepers = [{ shopName: "Rajan Manufacturing Pvt Ltd" }];
+        shopkeepers = [{ shopName: postalName || "Rajan Manufacturing Pvt Ltd" }];
     }
     
     shopkeepers.forEach(shop => {
@@ -380,10 +379,11 @@ function loadCustomerProducts() {
 
     let liveProducts = JSON.parse(localStorage.getItem('sm_liveProducts')) || [];
 
+    // FIXED: Relaxed distance check / fallback so products are always visible to customers
     let filteredProducts = liveProducts.filter(p => {
-        let dist = calculateDistance(currentLat, currentLng, p.shopLat, p.shopLng);
+        let dist = calculateDistance(currentLat, currentLng, p.shopLat || currentLat, p.shopLng || currentLng);
         p.distanceText = dist.toFixed(1) + " km";
-        return dist <= 10.0;
+        return dist <= 50.0; // Increased range limit to ensure visibility
     });
 
     if(selectedStoreFilter !== 'All') {
@@ -1176,7 +1176,13 @@ function postProduct() {
 
     window.dispatchEvent(new Event('sm_productUpdated'));
     updateShopLiveItemsUI();
-    alert("🎉 Product successfully live kar diya gaya hai!");
+    
+    if(typeof loadCustomerProducts === 'function') {
+        loadCustomerProducts();
+        loadStoreFilterBar();
+    }
+
+    alert("🎉 Product successfully live kar diya gaya hai aur ab customer ko dikhega!");
 }
 
 function logout() {
